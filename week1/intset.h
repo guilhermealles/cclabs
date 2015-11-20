@@ -7,8 +7,8 @@
  */
 
 typedef struct intSet {
-  unsigned int size;    /* size of the array 'bits'                   */
-  unsigned int *bits;   /* the set itself represented as a bit vector */
+    unsigned int size;    /* size of the array 'bits'                   */
+    unsigned int *bits;   /* the set itself represented as a bit vector */
 } intSet;
 
 intSet makeEmptyIntSet(void);
