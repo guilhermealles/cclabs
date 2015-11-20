@@ -36,7 +36,7 @@ static void expectCharacter(FILE *f, char expect) {
   char c = peekChar(f);
   if (c != expect) {
     fprintf(stderr, "Fatal error in readIntSetFromFile(): "
-	    "expected '%c'\n", expect);
+	    "expected '%c'\n", expect); 
     exit(EXIT_FAILURE);
   }
   fgetc(f);
