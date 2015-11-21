@@ -125,15 +125,80 @@ void saveNFA(char *filename, nfa n) {
     }
     fclose(f);
 }
+/*
+dfa convertNFAtoDFA(nfa n) {
+    intSet visited_states = makeEmptyIntSet();
+
+    int dfa_states_count = pow(2, n.nstates);
+    dfa d = makeNFA(dfa_states_count);
+}
+*/
+
+intSet epsilonClosure(int state, nfa n) {
+    intSet closure = copyIntSet(n.transition[state][EPSILON]);
+    return closure;
+}
+
+intSet epsilonStarClosure(int state, nfa n) {
+    intSet current_state_closure = epsilonClosure(state, n);
+    intSet current_state_closure_copy = copyIntSet(current_state_closure);
+
+    while (!isEmptyIntSet(current_state_closure_copy)) {
+        unsigned int state = chooseFromIntSet(current_state_closure_copy);
+        deleteIntSet(state, &current_state_closure_copy);
+
+        unionIntSet(&current_state_closure, epsilonStarClosure(state, n));
+    }
+
+    // Add the state itself in the intSet.
+    insertIntSet(state, &current_state_closure);
+
+    return current_state_closure;
+}
+
+intSet epsilonStarClosureSet(intSet states, nfa n) {
+    intSet states_copy = copyIntSet(states);
+    intSet final_closure = makeEmptyIntSet();
+
+    while (!isEmptyIntSet(states_copy)) {
+        unsigned int state = chooseFromIntSet(states_copy);
+        deleteIntSet(state, &states_copy);
+
+        if (isEmptyIntSet(final_closure)) {
+            final_closure = copyIntSet(epsilonStarClosure(state,n));
+        }
+
+        unionIntSet(&final_closure, epsilonStarClosure(state, n));
+    }
+
+    return final_closure;
+}
+
+intSet movement(unsigned int state, unsigned int symbol, nfa automaton) {
+    intSet result = copyIntSet(automaton.transition[state][symbol]);
+
+    return result;
+}
 
 int main (int argc, char **argv) {
     nfa automaton;
+    /*
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <nfa file>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
     automaton = readNFA(argv[1]);
-    saveNFA("out.nfa", automaton);
+     */
+    automaton = readNFA("/Users/Alles/Desktop/tmp/tmp/example.nfa");
+    //intSet demo = makeEmptyIntSet();
+    //insertIntSet(0, &demo);
+    //insertIntSet(1, &demo);
+    //insertIntSet(2, &demo);
+    //insertIntSet(3, &demo);
+    //printIntSet(demo);
+    printIntSet(epsilonStarClosure(3, automaton));
+    printf("\n");
+    //saveNFA("out.nfa", automaton);
     freeNFA(automaton);
     return EXIT_SUCCESS;
 }

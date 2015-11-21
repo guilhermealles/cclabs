@@ -1,4 +1,5 @@
 #ifndef INTSET_H
+#define INTSET_H
 
 /* file:   intset.h
  * author: Arnold Meijster (a.meijster@rug.nl)
