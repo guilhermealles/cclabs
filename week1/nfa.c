@@ -149,72 +149,80 @@ intSet epsilonClosure(int state, nfa n) {
 intSet epsilonStarClosure(int state, nfa n) {
     intSet current_state_closure = epsilonClosure(state, n);
     intSet current_state_closure_copy = copyIntSet(current_state_closure);
-
+    
     while (!isEmptyIntSet(current_state_closure_copy)) {
         unsigned int state = chooseFromIntSet(current_state_closure_copy);
         deleteIntSet(state, &current_state_closure_copy);
-
+        
         unionIntSet(&current_state_closure, epsilonStarClosure(state, n));
     }
-
+    
     // Add the state itself in the intSet.
     insertIntSet(state, &current_state_closure);
-
+    
     return current_state_closure;
 }
 
 intSet epsilonStarClosureSet(intSet states, nfa n) {
     intSet states_copy = copyIntSet(states);
     intSet final_closure = makeEmptyIntSet();
-
+    
     while (!isEmptyIntSet(states_copy)) {
         unsigned int state = chooseFromIntSet(states_copy);
         deleteIntSet(state, &states_copy);
-
+        
         if (isEmptyIntSet(final_closure)) {
             final_closure = copyIntSet(epsilonStarClosure(state,n));
         }
-
+        
         unionIntSet(&final_closure, epsilonStarClosure(state, n));
     }
-
+    
     return final_closure;
 }
 
 intSet movement(unsigned int state, unsigned int symbol, nfa automaton) {
     intSet result = copyIntSet(automaton.transition[state][symbol]);
-
+    
     return result;
 }
 
 intSet movementSet(intSet states, unsigned int symbol, nfa automaton) {
     intSet states_copy = copyIntSet(states);
     intSet result = makeEmptyIntSet();
-
+    
     while (!isEmptyIntSet(states_copy)) {
         unsigned int state = chooseFromIntSet(states_copy);
         deleteIntSet(state, &states_copy);
-
+        
         if (isEmptyIntSet(result)) {
             result = copyIntSet(movement(state, symbol, automaton));
         }
-
+        
         unionIntSet(&result, movement(state, symbol, automaton));
     }
-
-
+    
+    
     return result;
 }
 
 dfa convertNFAtoDFA(nfa n) {
     dfa final_dfa = makeNFA(pow(2, n.nstates));
     int visited_count = 0;
-
-    mapping[visited_count] = epsilonStarClosure(n.start, n);
-    mapping_size++;
-
-
-    while (visited_count <= mapping_size) {
+    
+    int i;
+    for (i=0; i<EPSILON; i++) {
+        intSet state = epsilonStarClosureSet(movement(n.start, i, n), n);
+        // If the state is not yet mapped/expanded
+        if (alreadyMapped(state) == -1) {
+            mapping[mapping_size] = copyIntSet(state);
+            mapping_size++;
+        }
+        final_dfa.transition[visited_count][i] = copyIntSet(state);
+    }
+    visited_count++;
+    
+    while (visited_count < mapping_size) {
         int i;
         for (i=0; i<EPSILON; i++) {
             intSet state = epsilonStarClosureSet(movementSet(mapping[visited_count], i, n), n);
@@ -227,18 +235,8 @@ dfa convertNFAtoDFA(nfa n) {
         }
         visited_count++;
     }
-
-    // Search for the starting state in the NFA
-    intSet start_state = makeEmptyIntSet();
-    insertIntSet(n.start, &start_state);
-    int start = alreadyMapped((start_state));
-    if (start == -1) {
-        fprintf(stderr, "DeuBosta\n");
-    }
-    final_dfa.start = (unsigned int) start;
-
+    
     // Assign the final states
-    int i;
     for (i=0; i<mapping_size; i++) {
         intSet state = copyIntSet(mapping[i]);
         intersectionIntSet(&state, n.final);
@@ -246,7 +244,7 @@ dfa convertNFAtoDFA(nfa n) {
             insertIntSet((unsigned int)i, &final_dfa.final);
         }
     }
-
+    
     return final_dfa;
 }
 
