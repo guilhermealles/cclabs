@@ -55,7 +55,7 @@ nfa readNFA(char *filename) {
     FILE *f;
     nfa n;
     unsigned int state, nstates;
-    
+
     f = fopen(filename, "r");
     if (!f) {
         fprintf(stderr, "Fatal error: failed to open file\n");
@@ -98,7 +98,7 @@ nfa readNFA(char *filename) {
 void saveNFA(char *filename, nfa n) {
     FILE *f;
     unsigned int c, state;
-    
+
     f = fopen(filename, "w");
     if (!f) {
         fprintf(stderr, "Fatal error: failed to open file\n");
