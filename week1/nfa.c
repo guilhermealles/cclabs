@@ -232,9 +232,6 @@ dfa convertNFAtoDFA(nfa n) {
     intSet start_state = makeEmptyIntSet();
     insertIntSet(n.start, &start_state);
     int start = alreadyMapped((start_state));
-    if (start == -1) {
-        fprintf(stderr, "DeuBosta\n");
-    }
     final_dfa.start = (unsigned int) start;
 
     // Assign the final states
