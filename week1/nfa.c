@@ -207,32 +207,44 @@ intSet movementSet(intSet states, unsigned int symbol, nfa automaton) {
 }
 
 dfa convertNFAtoDFA(nfa n) {
+    mapping_size = 0;
+    mapping = (intSet*) safeMalloc(sizeof(intSet) * pow(2, n.nstates));
+
+    // Map the first state to the start state (0)
+    intSet first_mapping = makeEmptyIntSet();
+    insertIntSet(0, &first_mapping);
+    mapping[mapping_size] = copyIntSet(first_mapping);
+    freeIntSet(first_mapping);
+    mapping_size++;
+
     dfa final_dfa = makeNFA(pow(2, n.nstates));
     int visited_count = 0;
 
-    mapping[visited_count] = epsilonStarClosure(n.start, n);
-    mapping_size++;
-
-
-    while (visited_count <= mapping_size) {
+    while (visited_count < mapping_size) {
         int i;
         for (i=0; i<EPSILON; i++) {
             intSet state = epsilonStarClosureSet(movementSet(mapping[visited_count], i, n), n);
-            // If the state is not yet mapped/expanded
-            if (alreadyMapped(state) == -1) {
-                mapping[mapping_size] = copyIntSet(state);
-                mapping_size++;
+            if (!isEmptyIntSet(state)) {
+                // If the state is not yet mapped/expanded
+                if (alreadyMapped(state) == -1) {
+                    mapping[mapping_size] = copyIntSet(state);
+                    mapping_size++;
+                }
+
+                unsigned int mapped_state = alreadyMapped(state);
+                intSet new_state = makeEmptyIntSet();
+                if (mapped_state == -1) {
+                    fprintf(stderr, "Fatal error");
+                }
+                else {
+                    insertIntSet(mapped_state, &new_state);
+                    final_dfa.transition[visited_count][i] = copyIntSet(new_state);
+                    freeIntSet(new_state);
+                }
             }
-            final_dfa.transition[visited_count][i] = copyIntSet(state);
         }
         visited_count++;
     }
-
-    // Search for the starting state in the NFA
-    intSet start_state = makeEmptyIntSet();
-    insertIntSet(n.start, &start_state);
-    int start = alreadyMapped((start_state));
-    final_dfa.start = (unsigned int) start;
 
     // Assign the final states
     int i;
@@ -244,6 +256,8 @@ dfa convertNFAtoDFA(nfa n) {
         }
     }
 
+    // Correct the number of states
+    final_dfa.nstates = visited_count;
     return final_dfa;
 }
 
@@ -254,8 +268,6 @@ int main (int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
     automaton = readNFA(argv[1]);
-    mapping_size = 0;
-    mapping = (intSet*) safeMalloc(sizeof(intSet) * pow(2, automaton.nstates));
     dfa result = convertNFAtoDFA(automaton);
     saveNFA("out.dfa", result);
     freeNFA(automaton);
