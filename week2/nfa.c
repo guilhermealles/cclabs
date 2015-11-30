@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "intset.h"
 
 /* Do not change EPSILON! There are 128 ASCII characters. */
@@ -149,91 +150,104 @@ intSet epsilonClosure(int state, nfa n) {
 intSet epsilonStarClosure(int state, nfa n) {
     intSet current_state_closure = epsilonClosure(state, n);
     intSet current_state_closure_copy = copyIntSet(current_state_closure);
-
+    
     while (!isEmptyIntSet(current_state_closure_copy)) {
         unsigned int state = chooseFromIntSet(current_state_closure_copy);
         deleteIntSet(state, &current_state_closure_copy);
-
+        
         unionIntSet(&current_state_closure, epsilonStarClosure(state, n));
     }
-
+    
     // Add the state itself in the intSet.
     insertIntSet(state, &current_state_closure);
-
+    
     return current_state_closure;
 }
 
 intSet epsilonStarClosureSet(intSet states, nfa n) {
     intSet states_copy = copyIntSet(states);
     intSet final_closure = makeEmptyIntSet();
-
+    
     while (!isEmptyIntSet(states_copy)) {
         unsigned int state = chooseFromIntSet(states_copy);
         deleteIntSet(state, &states_copy);
-
+        
         if (isEmptyIntSet(final_closure)) {
             final_closure = copyIntSet(epsilonStarClosure(state,n));
         }
-
+        
         unionIntSet(&final_closure, epsilonStarClosure(state, n));
     }
-
+    
     return final_closure;
 }
 
 intSet movement(unsigned int state, unsigned int symbol, nfa automaton) {
     intSet result = copyIntSet(automaton.transition[state][symbol]);
-
+    
     return result;
 }
 
 intSet movementSet(intSet states, unsigned int symbol, nfa automaton) {
     intSet states_copy = copyIntSet(states);
     intSet result = makeEmptyIntSet();
-
+    
     while (!isEmptyIntSet(states_copy)) {
         unsigned int state = chooseFromIntSet(states_copy);
         deleteIntSet(state, &states_copy);
-
+        
         if (isEmptyIntSet(result)) {
             result = copyIntSet(movement(state, symbol, automaton));
         }
-
+        
         unionIntSet(&result, movement(state, symbol, automaton));
     }
-
-
+    
+    
     return result;
 }
 
 dfa convertNFAtoDFA(nfa n) {
+    mapping_size = 0;
+    mapping = (intSet*) safeMalloc(sizeof(intSet) * pow(2, n.nstates));
+    
+    // Map the first state to the start state (0)
+    intSet first_mapping = makeEmptyIntSet();
+    insertIntSet(0, &first_mapping);
+    mapping[mapping_size] = copyIntSet(first_mapping);
+    freeIntSet(first_mapping);
+    mapping_size++;
+    
     dfa final_dfa = makeNFA(pow(2, n.nstates));
     int visited_count = 0;
-
-    mapping[visited_count] = epsilonStarClosure(n.start, n);
-    mapping_size++;
-
-
-    while (visited_count <= mapping_size) {
+    
+    while (visited_count < mapping_size) {
         int i;
         for (i=0; i<EPSILON; i++) {
-            intSet state = epsilonStarClosureSet(movementSet(mapping[visited_count], i, n), n);
-            // If the state is not yet mapped/expanded
-            if (alreadyMapped(state) == -1) {
-                mapping[mapping_size] = copyIntSet(state);
-                mapping_size++;
+            //intSet state = epsilonStarClosureSet(movementSet(mapping[visited_count], i, n), n);
+            intSet state = movementSet(epsilonStarClosureSet(mapping[visited_count], n), i, n);
+            if (!isEmptyIntSet(state)) {
+                // If the state is not yet mapped/expanded
+                if (alreadyMapped(state) == -1) {
+                    mapping[mapping_size] = copyIntSet(state);
+                    mapping_size++;
+                }
+                
+                unsigned int mapped_state = alreadyMapped(state);
+                intSet new_state = makeEmptyIntSet();
+                if (mapped_state == -1) {
+                    fprintf(stderr, "Fatal error");
+                }
+                else {
+                    insertIntSet(mapped_state, &new_state);
+                    final_dfa.transition[visited_count][i] = copyIntSet(new_state);
+                    freeIntSet(new_state);
+                }
             }
-            final_dfa.transition[visited_count][i] = copyIntSet(state);
         }
         visited_count++;
     }
-
-    // Search for the starting state in the NFA
-    intSet start_state = makeEmptyIntSet();
-    insertIntSet(n.start, &start_state);
-    int start = alreadyMapped((start_state));
-    final_dfa.start = (unsigned int) start;
-
+    
     // Assign the final states
     int i;
     for (i=0; i<mapping_size; i++) {
@@ -243,22 +257,119 @@ dfa convertNFAtoDFA(nfa n) {
             insertIntSet((unsigned int)i, &final_dfa.final);
         }
     }
-
+    
+    // Correct the number of states
+    final_dfa.nstates = visited_count;
     return final_dfa;
 }
 
+intSet addToAllIntSetItems(unsigned int value, intSet set) {
+    intSet set_copy = copyIntSet(set);
+    intSet result = makeEmptyIntSet();
+    while (!isEmptyIntSet(set_copy)) {
+        int state = chooseFromIntSet(set_copy);
+        deleteIntSet(state, &set_copy);
+        
+        state += value;
+        insertIntSet(state, &result);
+    }
+    return result;
+}
+
+void copyTransitions(nfa sourceNfa, unsigned int sourceState, nfa *destNfa, unsigned int completedNfaStates) {
+    unsigned int i;
+    for (i=0; i<EPSILON+1; i++) {
+        destNfa->transition[sourceState + completedNfaStates][i] = addToAllIntSetItems(completedNfaStates, sourceNfa.transition[sourceState][i]);
+    }
+}
+
+void processDfaString(char *string, dfa d) {
+    unsigned int string_size = (unsigned int)strlen(string);
+    unsigned int string_index = 0;
+    int last_accepted_index = -1;
+    unsigned int current_state = d.start;
+    for (string_index = 0; string_index < string_size; string_index++) {
+        char c = string[string_index];
+        if (isEmptyIntSet(d.transition[current_state][c])) {
+            break;
+        }
+        else {
+            current_state = chooseFromIntSet(d.transition[current_state][string[string_index]]);
+            if (isMemberIntSet(current_state, d.final)) {
+                last_accepted_index = string_index;
+            }
+        }
+    }
+    printf("Accepted: \"");
+    if ((int)last_accepted_index > -1) {
+        for (string_index = 0; string_index <= last_accepted_index; string_index++) {
+            printf("%c", string[string_index]);
+        }
+    }
+    else {
+        string_index = 0;
+    }
+    printf("\"\nRejected: \"");
+    for (; string_index < string_size; string_index++) {
+        printf("%c", string[string_index]);
+    }
+    printf("\"\n");
+}
+
+nfa mergeNFAs(nfa *nfaArray, unsigned int nfaCount) {
+    unsigned int statesCount = 0;
+    int i;
+    for (i=0; i<nfaCount; i++) {
+        statesCount += nfaArray[i].nstates;
+    }
+    
+    // Create a new NFA
+    nfa unionNfa = makeNFA(statesCount+1);
+    unionNfa.start = 0;
+    unsigned int sourceNfaIndex = 0;
+    unsigned int completedNfaStates = 1;
+    for (i=0; i<nfaCount; i++) {
+        // Will start copying a new nfa, add an epsilon transition from the starting state to the next state
+        // (which is the start state of the former nfa)
+        insertIntSet(completedNfaStates, &unionNfa.transition[0][EPSILON]);
+        
+        // Copy the individual NFA, loop through the states
+        for (sourceNfaIndex=0; sourceNfaIndex < nfaArray[i].nstates; sourceNfaIndex++) {
+            copyTransitions(nfaArray[i], sourceNfaIndex, &unionNfa, completedNfaStates);
+        }
+        intSet finalStates = addToAllIntSetItems(completedNfaStates, nfaArray[i].final);
+        unionIntSet(&unionNfa.final, finalStates);
+        
+        completedNfaStates += nfaArray[i].nstates;
+    }
+    return unionNfa;
+}
+
 int main (int argc, char **argv) {
-    nfa automaton;
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <nfa file>\n", argv[0]);
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <nfa file(s)>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    automaton = readNFA(argv[1]);
-    mapping_size = 0;
-    mapping = (intSet*) safeMalloc(sizeof(intSet) * pow(2, automaton.nstates));
-    dfa result = convertNFAtoDFA(automaton);
-    saveNFA("out.dfa", result);
-    freeNFA(automaton);
-    freeNFA(result);
+    
+    unsigned int nfaCount = argc-1;
+    nfa *nfaArray = malloc(sizeof(nfa) * nfaCount);
+    
+    int i;
+    for (i=1; i<argc; i++) {
+        nfaArray[i-1] = readNFA(argv[i]);
+    }
+    
+    nfa unionNfa = mergeNFAs(nfaArray, nfaCount);
+    dfa d = convertNFAtoDFA(unionNfa);
+    saveNFA("out.dfa", d);
+    
+    char *string = malloc(sizeof(char) * 1024);
+    while (1) {
+        printf("Please type a string (exit with ^c): ");
+        scanf("%s", string);
+        processDfaString(string, d);
+        printf("\n");
+    }
+    
     return EXIT_SUCCESS;
 }

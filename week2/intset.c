@@ -113,9 +113,11 @@ int isMemberIntSet(unsigned int n, intSet s) {
 }
 
 void unionIntSet(intSet *lhs, intSet rhs) {
-    unsigned int i, sz = maximum(lhs->size, rhs.size);
-    resize(sz, lhs);
-    for (i=0; i < sz; i++) {
+    unsigned int i;
+    if (lhs->size <= rhs.size) {
+        resize(rhs.size, lhs);
+    }
+    for (i=0; i < rhs.size; i++) {
         lhs->bits[i] |= rhs.bits[i];
     }
 }
@@ -165,7 +167,7 @@ int isEqualIntSet(intSet lhs, intSet rhs) {
     if (i < lhs.size) {
         return 0;
     }
-    while ((i < rhs.size) && (lhs.bits[i] == 0)) {
+    while ((i < rhs.size) && (rhs.bits[i] == 0)) {
         i++;
     }
     return (i >= rhs.size ? 1 : 0);
