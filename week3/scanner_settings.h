@@ -20,4 +20,5 @@ int exists_default_action = FALSE;
 char *default_action;
 
 void parseScannerOptions(FILE *file);
+void printScannerSettings();
 #endif

@@ -4,7 +4,6 @@
 
 #define BUFFER_SIZE 512
 
-// FALTA VER O ;;;;;;;
 void parseScannerOptions(FILE *file) {
     char *buffer = malloc(sizeof(char) * BUFFER_SIZE);
 
@@ -13,38 +12,74 @@ void parseScannerOptions(FILE *file) {
         fscanf(file, "%s", buffer);
         if (strcmp(buffer, "lexer") == 0) {
             fscanf(file, "%s", buffer);
-            int lexer_string_size = strlen(buffer) + 1;
-            free(lexer);
-            lexer = malloc(sizeof(char) * lexer_string_size);
-            strcpy(lexer, buffer);
+            int lexer_string_size = strlen(buffer);
+            if (buffer[lexer_string_size-1] == ';') {
+                // Remove ';' from the string
+                buffer[lexer_string_size-1] = '\0';
+                lexer_string_size--;
+
+                free(lexer);
+                lexer = malloc(sizeof(char) * lexer_string_size);
+                strcpy(lexer, buffer);
+            }
+            else {
+                fprintf(stderr, "Error: expected \';\' after %s.\n", buffer);
+            }
         }
         else if (strcmp(buffer, "lexeme") == 0) {
             fscanf(file, "%s", buffer);
-            int lexeme_string_size = strlen(buffer) + 1;
-            free(lexeme);
-            lexeme = malloc(sizeof(char) * lexeme_string_size);
-            strcpy(lexeme, buffer);
+            int lexeme_string_size = strlen(buffer);
+            if (buffer[lexeme_string_size-1] == ';') {
+                // Remove ';' from the string
+                buffer[lexeme_string_size-1] = '\0';
+                lexeme_string_size--;
+
+                free(lexeme);
+                lexeme = malloc(sizeof(char) * lexeme_string_size);
+                strcpy(lexeme, buffer);
+            }
+            else {
+                fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
+            }
         }
         else if (strcmp(buffer, "positioning") == 0) {
             fscanf(file, "%s", buffer);
-            if (strcmp(buffer, "on") == 0) {
+            if (strcmp(buffer, "on;") == 0) {
                 fscanf(file, "%s", buffer);
                 if (strcmp(buffer, "where") == 0) {
                     fscanf(file, "%s", buffer);
                     if (strcmp(buffer, "line") == 0) {
                         fscanf(file, "%s", buffer);
-                        int line_string_size = strlen(buffer) + 1;
-                        free (positioning_line_var);
-                        positioning_line_var = malloc(sizeof(char) * line_string_size);
-                        strcpy(positioning_line_var, buffer);
+                        int line_string_size = strlen(buffer);
+                        if (buffer[line_string_size-1] == ';') {
+                            // Remove ';' from the string
+                            buffer[line_string_size-1] = '\0';
+                            line_string_size--;
+
+                            free(positioning_line_var);
+                            positioning_line_var = malloc(sizeof(char) * line_string_size);
+                            strcpy(positioning_line_var, buffer);
+                        }
+                        else {
+                            fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
+                        }
 
                         fscanf(file, "%s", buffer);
                         if (strcmp(buffer, "column") == 0) {
                             fscanf(file, "%s", buffer);
                             int column_string_size = strlen(buffer) + 1;
-                            free (positioning_column_var);
-                            positioning_column_var = malloc(sizeof(char) * column_string_size);
-                            strcpy(positioning_column_var, buffer);
+                            if (buffer[column_string_size-1] == ';') {
+                                // Remove ';' from the string
+                                buffer[column_string_size-1] = '\0';
+                                column_string_size--;
+
+                                free(positioning_column_var);
+                                positioning_column_var = malloc(sizeof(char) * column_string_size);
+                                strcpy(positioning_column_var, buffer);
+                            }
+                            else {
+                                fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
+                            }
                         }
                         else {
                             fprintf(stderr, "Error: expected \"column\".\n");
@@ -61,11 +96,11 @@ void parseScannerOptions(FILE *file) {
                     exit(EXIT_FAILURE);
                 }
             }
-            else if (strcmp(buffer, "off") == 0) {
+            else if (strcmp(buffer, "off;") == 0) {
                 // no action
             }
             else {
-                fprintf(stderr, "Error: expected \"on\" or \"off\".\n");
+                fprintf(stderr, "Error: expected \"on;\" or \"off;\".\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -75,10 +110,19 @@ void parseScannerOptions(FILE *file) {
                 exists_default_action = TRUE;
 
                 fscanf(file, "%s", buffer);
-                int default_action_string_size = strlen(buffer) + 1;
-                free (default_action);
-                default_action = malloc(sizeof(char) * default_action_string_size);
-                strcpy(default_action, buffer);
+                int default_action_string_size = strlen(buffer);
+                if (buffer[default_action_string_size-1] == ';') {
+                    // Remove ';' from the string
+                    buffer[default_action_string_size-1] = '\0';
+                    default_action_string_size--;
+
+                    free(default_action);
+                    default_action = malloc(sizeof(char) * default_action_string_size);
+                    strcpy(default_action, buffer);
+                }
+                else {
+                    fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
+                }
             }
             else {
                 fprintf(stderr, "Error: expected \"action\".\n");
@@ -89,7 +133,7 @@ void parseScannerOptions(FILE *file) {
             end_of_section = TRUE;
         }
         else {
-            fprintf(stderr, "Parsing error: found %s\n", buffer);
+            fprintf(stderr, "Error: unexpected keyword, found \"%s\".\n", buffer);
             exit(EXIT_FAILURE);
         }
     }
@@ -108,5 +152,19 @@ void parseScannerOptions(FILE *file) {
     else {
         fprintf(stderr, "Error: expected \"section\", found %s", buffer);
         exit(EXIT_FAILURE);
+    }
+}
+
+void printScannerSettings() {
+    printf("Lexer option: \"%s\".\n", lexer);
+    printf("Lexeme option: \"%s\".\n", lexeme);
+    printf("Positioning option: \"%d\".\n", positioning);
+    if (positioning == TRUE) {
+        printf("Positioning line variable: \"%s\".\n", positioning_line_var);
+        printf("Positioning column variable: \"%s\".\n", positioning_column_var);
+    }
+    printf("Default action exists: \"%d\".\n", exists_default_action);
+    if (exists_default_action) {
+        printf("Default action function name: \"%s\".\n", default_action);
     }
 }
