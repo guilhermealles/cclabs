@@ -6,6 +6,9 @@ int main (int argc, char **argv) {
 
     FILE *file = fopen(filename, "r");
     if (file) {
+        char buf[255];
+        fscanf(file, "%s", buf);
+        fscanf(file, "%s", buf);
         parseScannerOptions(file);
         printScannerSettings();
     }
@@ -13,5 +16,5 @@ int main (int argc, char **argv) {
         puts("puts");
     }
 
-    return EXIT_SUCCESS;
+    return 0;
 }

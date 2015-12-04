@@ -8,17 +8,7 @@
 #define DEFAULT_LEXEME "yytext";
 #define DEFAULT_POSITIONING FALSE;
 
-char *lexer = DEFAULT_LEXER;
-
-char *lexeme = DEFAULT_LEXEME;
-
-int positioning = FALSE;
-char *positioning_line_var;
-char *positioning_column_var;
-
-int exists_default_action = FALSE;
-char *default_action;
-
 void parseScannerOptions(FILE *file);
 void printScannerSettings();
+
 #endif

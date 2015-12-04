@@ -1,8 +1,20 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "scanner_settings.h"
 
 #define BUFFER_SIZE 512
+
+char *lexer = DEFAULT_LEXER;
+char *lexeme = DEFAULT_LEXEME;
+
+int positioning_set = FALSE;
+char *positioning_line_var;
+char *positioning_column_var;
+
+int exists_default_action = FALSE;
+char *default_action;
+
 
 void parseScannerOptions(FILE *file) {
     char *buffer = malloc(sizeof(char) * BUFFER_SIZE);
@@ -11,19 +23,19 @@ void parseScannerOptions(FILE *file) {
     while (!end_of_section) {
         fscanf(file, "%s", buffer);
         if (strcmp(buffer, "lexer") == 0) {
+
             fscanf(file, "%s", buffer);
             int lexer_string_size = strlen(buffer);
             if (buffer[lexer_string_size-1] == ';') {
                 // Remove ';' from the string
                 buffer[lexer_string_size-1] = '\0';
                 lexer_string_size--;
-
-                free(lexer);
                 lexer = malloc(sizeof(char) * lexer_string_size);
                 strcpy(lexer, buffer);
             }
             else {
                 fprintf(stderr, "Error: expected \';\' after %s.\n", buffer);
+                exit(EXIT_FAILURE);
             }
         }
         else if (strcmp(buffer, "lexeme") == 0) {
@@ -33,13 +45,12 @@ void parseScannerOptions(FILE *file) {
                 // Remove ';' from the string
                 buffer[lexeme_string_size-1] = '\0';
                 lexeme_string_size--;
-
-                free(lexeme);
                 lexeme = malloc(sizeof(char) * lexeme_string_size);
                 strcpy(lexeme, buffer);
             }
             else {
                 fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
+                exit(EXIT_FAILURE);
             }
         }
         else if (strcmp(buffer, "positioning") == 0) {
@@ -49,36 +60,35 @@ void parseScannerOptions(FILE *file) {
                 if (strcmp(buffer, "where") == 0) {
                     fscanf(file, "%s", buffer);
                     if (strcmp(buffer, "line") == 0) {
+                        positioning_set = TRUE;
                         fscanf(file, "%s", buffer);
                         int line_string_size = strlen(buffer);
                         if (buffer[line_string_size-1] == ';') {
                             // Remove ';' from the string
                             buffer[line_string_size-1] = '\0';
                             line_string_size--;
-
-                            free(positioning_line_var);
                             positioning_line_var = malloc(sizeof(char) * line_string_size);
                             strcpy(positioning_line_var, buffer);
                         }
                         else {
                             fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
+                            exit(EXIT_FAILURE);
                         }
 
                         fscanf(file, "%s", buffer);
                         if (strcmp(buffer, "column") == 0) {
                             fscanf(file, "%s", buffer);
-                            int column_string_size = strlen(buffer) + 1;
+                            int column_string_size = strlen(buffer);
                             if (buffer[column_string_size-1] == ';') {
                                 // Remove ';' from the string
                                 buffer[column_string_size-1] = '\0';
                                 column_string_size--;
-
-                                free(positioning_column_var);
                                 positioning_column_var = malloc(sizeof(char) * column_string_size);
                                 strcpy(positioning_column_var, buffer);
                             }
                             else {
                                 fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
+                                exit(EXIT_FAILURE);
                             }
                         }
                         else {
@@ -115,13 +125,12 @@ void parseScannerOptions(FILE *file) {
                     // Remove ';' from the string
                     buffer[default_action_string_size-1] = '\0';
                     default_action_string_size--;
-
-                    free(default_action);
                     default_action = malloc(sizeof(char) * default_action_string_size);
                     strcpy(default_action, buffer);
                 }
                 else {
                     fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
+                    exit(EXIT_FAILURE);
                 }
             }
             else {
@@ -129,7 +138,7 @@ void parseScannerOptions(FILE *file) {
                 exit(EXIT_FAILURE);
             }
         }
-        if (strcmp(buffer, "end") == 0) {
+        else if (strcmp(buffer, "end") == 0) {
             end_of_section = TRUE;
         }
         else {
@@ -158,8 +167,8 @@ void parseScannerOptions(FILE *file) {
 void printScannerSettings() {
     printf("Lexer option: \"%s\".\n", lexer);
     printf("Lexeme option: \"%s\".\n", lexeme);
-    printf("Positioning option: \"%d\".\n", positioning);
-    if (positioning == TRUE) {
+    printf("Positioning option: \"%d\".\n", positioning_set);
+    if (positioning_set == TRUE) {
         printf("Positioning line variable: \"%s\".\n", positioning_line_var);
         printf("Positioning column variable: \"%s\".\n", positioning_column_var);
     }
@@ -167,4 +176,66 @@ void printScannerSettings() {
     if (exists_default_action) {
         printf("Default action function name: \"%s\".\n", default_action);
     }
+}
+
+void getNextSymbol(FILE *f, char *buffer, char delimiter, int error_on_whitespace) {
+    unsigned int buffer_index = 0;
+    char c = fgetc(f);
+    while (c == ' ') {
+        c = fgetc(f);
+    }
+    if (c != delimiter) {
+        buffer[buffer_index] = c;
+        buffer_index++;
+    }
+    while (c != delimiter) {
+        c = fgetc(f);
+        if (c == ' ') {
+            c = fgetc(f);
+            while (c == ' ') {
+                c = fgetc(f);
+            }
+            if (c != delimiter) {
+                if (error_on_whitespace) {
+                    fprintf(stderr, "Error: expected \"%c\".\n", delimiter);
+                    exit(EXIT_FAILURE);
+                }
+                else {
+                    buffer[buffer_index] = c;
+                    buffer_index++;
+                }
+            }
+        }
+        else if (c == '\n') {
+            fprintf(stderr, "Error: unexpected line break.\n");
+            exit(EXIT_FAILURE);
+        }
+        else if (c == '\0') {
+            fprintf(stderr, "Error: unexpected end-of-string.\n");
+            exit(EXIT_FAILURE);
+        }
+        else if (c != delimiter) {
+            buffer[buffer_index] = c;
+            buffer_index++;
+        }
+    }
+    buffer[buffer_index] = '\0';
+    buffer_index++;
+}
+
+// returns true if c is 0~9, a~z, A~Z or _
+inline int isValidChar(char c) {
+    if (c < 48) {
+        return FALSE;
+    }
+    if (c > 57 && c < 65) {
+        return FALSE;
+    }
+    if (c > 90 && c < 97 && c != 95) {
+        return FALSE;
+    }
+    if (c > 122) {
+        return FALSE;
+    }
+    return TRUE;
 }

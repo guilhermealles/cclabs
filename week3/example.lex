@@ -35,7 +35,7 @@ section regexps
   regexp ';';
     token SEMICOLON;
   regexp #39;
-    token QUOTE;  
+    token QUOTE;
   regexp { '<'; '<'.'='; '<'.'>'; '>'.'='; '>' };
     token RELOP;
   regexp { '+'; '-' };
