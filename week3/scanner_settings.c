@@ -23,73 +23,36 @@ void parseScannerOptions(FILE *file) {
     while (!end_of_section) {
         fscanf(file, "%s", buffer);
         if (strcmp(buffer, "lexer") == 0) {
-
-            fscanf(file, "%s", buffer);
-            int lexer_string_size = strlen(buffer);
-            if (buffer[lexer_string_size-1] == ';') {
-                // Remove ';' from the string
-                buffer[lexer_string_size-1] = '\0';
-                lexer_string_size--;
-                lexer = malloc(sizeof(char) * lexer_string_size);
-                strcpy(lexer, buffer);
-            }
-            else {
-                fprintf(stderr, "Error: expected \';\' after %s.\n", buffer);
-                exit(EXIT_FAILURE);
-            }
+            getNextSymbol(file, buffer, ';', TRUE);
+            int lexer_string_size = strlen(buffer) + 1;
+            lexer = malloc(sizeof(char) * lexer_string_size);
+            strcpy(lexer, buffer);
         }
         else if (strcmp(buffer, "lexeme") == 0) {
-            fscanf(file, "%s", buffer);
-            int lexeme_string_size = strlen(buffer);
-            if (buffer[lexeme_string_size-1] == ';') {
-                // Remove ';' from the string
-                buffer[lexeme_string_size-1] = '\0';
-                lexeme_string_size--;
-                lexeme = malloc(sizeof(char) * lexeme_string_size);
-                strcpy(lexeme, buffer);
-            }
-            else {
-                fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
-                exit(EXIT_FAILURE);
-            }
+            getNextSymbol(file, buffer, ';', TRUE);
+            int lexeme_string_size = strlen(buffer) + 1;
+            lexeme = malloc(sizeof(char) * lexeme_string_size);
+            strcpy(lexeme, buffer);
         }
         else if (strcmp(buffer, "positioning") == 0) {
-            fscanf(file, "%s", buffer);
-            if (strcmp(buffer, "on;") == 0) {
+            getNextSymbol(file, buffer, ';', TRUE);
+            if (strcmp(buffer, "on") == 0) {
                 fscanf(file, "%s", buffer);
                 if (strcmp(buffer, "where") == 0) {
                     fscanf(file, "%s", buffer);
                     if (strcmp(buffer, "line") == 0) {
                         positioning_set = TRUE;
-                        fscanf(file, "%s", buffer);
-                        int line_string_size = strlen(buffer);
-                        if (buffer[line_string_size-1] == ';') {
-                            // Remove ';' from the string
-                            buffer[line_string_size-1] = '\0';
-                            line_string_size--;
-                            positioning_line_var = malloc(sizeof(char) * line_string_size);
-                            strcpy(positioning_line_var, buffer);
-                        }
-                        else {
-                            fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
-                            exit(EXIT_FAILURE);
-                        }
+                        getNextSymbol(file, buffer, ';', TRUE);
+                        int line_string_size = strlen(buffer) + 1;
+                        positioning_line_var = malloc(sizeof(char) * line_string_size);
+                        strcpy(positioning_line_var, buffer);
 
                         fscanf(file, "%s", buffer);
                         if (strcmp(buffer, "column") == 0) {
-                            fscanf(file, "%s", buffer);
-                            int column_string_size = strlen(buffer);
-                            if (buffer[column_string_size-1] == ';') {
-                                // Remove ';' from the string
-                                buffer[column_string_size-1] = '\0';
-                                column_string_size--;
-                                positioning_column_var = malloc(sizeof(char) * column_string_size);
-                                strcpy(positioning_column_var, buffer);
-                            }
-                            else {
-                                fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
-                                exit(EXIT_FAILURE);
-                            }
+                            getNextSymbol(file, buffer, ';', TRUE);
+                            int column_string_size = strlen(buffer) + 1;
+                            positioning_column_var = malloc(sizeof(char) * column_string_size);
+                            strcpy(positioning_column_var, buffer);
                         }
                         else {
                             fprintf(stderr, "Error: expected \"column\".\n");
@@ -106,7 +69,7 @@ void parseScannerOptions(FILE *file) {
                     exit(EXIT_FAILURE);
                 }
             }
-            else if (strcmp(buffer, "off;") == 0) {
+            else if (strcmp(buffer, "off") == 0) {
                 // no action
             }
             else {
@@ -119,19 +82,10 @@ void parseScannerOptions(FILE *file) {
             if (strcmp(buffer, "action") == 0) {
                 exists_default_action = TRUE;
 
-                fscanf(file, "%s", buffer);
-                int default_action_string_size = strlen(buffer);
-                if (buffer[default_action_string_size-1] == ';') {
-                    // Remove ';' from the string
-                    buffer[default_action_string_size-1] = '\0';
-                    default_action_string_size--;
-                    default_action = malloc(sizeof(char) * default_action_string_size);
-                    strcpy(default_action, buffer);
-                }
-                else {
-                    fprintf(stderr, "Error: expected \';\' after %s\n", buffer);
-                    exit(EXIT_FAILURE);
-                }
+                getNextSymbol(file, buffer, ';', TRUE);
+                int default_action_string_size = strlen(buffer) + 1;
+                default_action = malloc(sizeof(char) * default_action_string_size);
+                strcpy(default_action, buffer);
             }
             else {
                 fprintf(stderr, "Error: expected \"action\".\n");

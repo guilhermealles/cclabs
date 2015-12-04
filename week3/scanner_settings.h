@@ -10,5 +10,7 @@
 
 void parseScannerOptions(FILE *file);
 void printScannerSettings();
+void getNextSymbol(FILE *f, char *buffer, char delimiter, int error_on_whitespace);
+inline int isValidChar(char c);
 
 #endif
