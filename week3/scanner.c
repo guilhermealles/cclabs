@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include "lib/intset.h"
 #include "scanner_settings.h"
+#include "scanner_definitions.h"
 
 int main (int argc, char **argv) {
     char *filename = "example.lex";
@@ -7,10 +9,16 @@ int main (int argc, char **argv) {
     FILE *file = fopen(filename, "r");
     if (file) {
         char buf[255];
-        fscanf(file, "%s", buf);
-        fscanf(file, "%s", buf);
+        fscanf(file, "%s", buf); //section
+        fscanf(file, "%s", buf); //options
         parseScannerOptions(file);
-        printScannerSettings();
+        printScannerOptions();
+        printf("\n\n");
+        fscanf(file, "%s", buf); //section
+        fscanf(file, "%s", buf); //defines
+        parseScannerDefinitions(file);
+        printScannerDefinitions();
+
     }
     else {
         puts("puts");
