@@ -138,8 +138,8 @@ void parseScannerRegularExpressions(FILE *file) {
 void printRegularExpressionsData(){
     int i;
     for (i = 0; i < regular_expressions_count; i++){
-        printf("%d REGEXP: %s \n", i, regular_expressions[i]);
-        printf("TOKEN: %s \n", regular_expressions_tokens[i]);
-        printf("ACTION: %s \n", regular_expressions_actions[i]);
+        printf("%d REGEXP: %s", i, regular_expressions[i]);
+        printf("Token: %s \n", regular_expressions_tokens[i]);
+        printf("Action: %s \n", regular_expressions_actions[i]);
     }
 }
