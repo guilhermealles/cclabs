@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "scanner_regexps.h"
-#include "scanner_settings.h" // Criar biblioteca com definições!
+#include "lib/scanner_lib.h"
 
 #define MAX_REGEXP_SIZE 256
 #define MAX_TOKEN_SIZE 128

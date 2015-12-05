@@ -3,8 +3,7 @@
 #include <string.h>
 #include "lib/intset.h"
 #include "scanner_definitions.h"
-// Temporary, should create a scanner_lib.h and scanner_lib.c for common routines.
-#include "scanner_settings.h"
+#include "lib/scanner_lib.h"
 
 #define MAX_IDENTIFIER_SIZE 129 // maximum string length for a definition name
 #define BUFFER_SIZE 1024
