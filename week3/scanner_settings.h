@@ -9,8 +9,8 @@
 #define DEFAULT_POSITIONING FALSE;
 
 void parseScannerOptions(FILE *file);
-void printScannerSettings();
+void printScannerOptions();
 void getNextSymbol(FILE *f, char *buffer, char delimiter, int error_on_whitespace);
-inline int isValidChar(char c);
+int isValidChar(char c);
 
 #endif

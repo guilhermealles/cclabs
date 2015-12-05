@@ -118,7 +118,7 @@ void parseScannerOptions(FILE *file) {
     }
 }
 
-void printScannerSettings() {
+void printScannerOptions() {
     printf("Lexer option: \"%s\".\n", lexer);
     printf("Lexeme option: \"%s\".\n", lexeme);
     printf("Positioning option: \"%d\".\n", positioning_set);
@@ -178,7 +178,7 @@ void getNextSymbol(FILE *f, char *buffer, char delimiter, int error_on_whitespac
 }
 
 // returns true if c is 0~9, a~z, A~Z or _
-inline int isValidChar(char c) {
+int isValidChar(char c) {
     if (c < 48) {
         return FALSE;
     }
