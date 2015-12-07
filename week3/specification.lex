@@ -19,6 +19,8 @@ quotechar   \x27{letter}\x27
 "lexer"             { return (LEXER_OPTION);            }
 "lexeme"            { return (LEXEME_OPTION);           }
 "positioning"       { return (POSITIONING_OPTION);      }
+"on"                { return (POSITIONING_ON);                      }
+"off"               { return (POSITIONING_OFF);         }
 "where"             { return (WHERE_CLAUSE);            }
 "line"              { return (POSITIONING_LINE);        }
 "column"            { return (POSITIONING_COLUMN);      }
