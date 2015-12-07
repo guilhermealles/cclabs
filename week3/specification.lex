@@ -56,6 +56,7 @@ unaryop         [?*+]
 "}"                 { return (CLOSE_CURLYBRACES);       }
 "["                 { return (OPEN_BRACES);             }
 "]"                 { return (CLOSE_BRACES");           }
+","                 { return (COMMA);                   }
 
 {identifier}        { return (IDENTIFIER);              }
 {quoteint}          { return (LITERAL_INT);             }
