@@ -1,12 +1,19 @@
 %%
 
-white       [ \t]+
-digit       [0-9]
-integer     {digit}+
-letter      [a-z]|[A-Z]
-identifier  {letter}+
-quoteint    \x27{integer}\x27
-quotechar   \x27{letter}\x27
+white               [ \t]+
+digit               [0-9]
+integer             {digit}+
+letter              [a-z]|[A-Z]
+identifier          {letter}+
+quoteint            \x27{integer}\x27
+quotechar           \x27{letter}\x27
+open_parenthesis    \(
+close_parenthesis   \)
+operator            [\+ | \- | \* | \< | \> ]
+binary_operator     [\< | \>][\= | \>]
+optional_operator   [\?]
+epsilon             epsilon
+
 
 %%
 
