@@ -55,10 +55,32 @@ RegularExpressionSet    :
                         ;
 
 RegularExpression       :
-                            [Term] [BINARYOP Term]* [UNARYOP]?
+                            Term [BINARYOP Term]*
                         ;
-
 
 Term                    :
-                            [[OPERAND][UNARYOP]?] | [OPEN_PARENTHESIS Term CLOSE_PARENTHESIS]
+                            Factor [UNARYOP]?
                         ;
+
+Factor                  :
+                            OPERAND
+                        |   OPEN_PARENTHESIS Expression CLOSE_PARENTHESIS
+                        ;
+
+
+{
+/*****************************************************************/
+/* the following code is copied verbatim in the generated C file */
+
+void LLmessage(int token) {
+    printf("Syntax error....abort\n");
+    exit(-1);
+}
+
+int main() {
+    LLparser();
+    return 0;
+}
+
+/*****************************************************************/
+}
