@@ -2,6 +2,7 @@
 /**********************************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include "scanner_specification.h"
 
 extern char *yytext;
 extern int line;
@@ -27,17 +28,17 @@ Input                   : SpecificationFile
 SpecificationFile       :
                             [BEGIN_SECTION_OPTIONS OptionsSection END_SECTION_OPTIONS SEMICOLON]?
                             [BEGIN_SECTION_DEFINES DefinesSection END_SECTION_DEFINES SEMICOLON]?
-                            [BEGIN_SECTION_REGEXPS RegExpsSection END_SECTION_REGEXPS SEMICOLON]
+                            [BEGIN_SECTION_REGEXPS RegExpsSection END_SECTION_REGEXPS SEMICOLON {printOptions(); exit(EXIT_SUCCESS);}]
                         ;
 
 OptionsSection          :
-                            [LEXER_OPTION IDENTIFIER SEMICOLON]?
-                            [LEXEME_OPTION IDENTIFIER SEMICOLON]?
-                            [[POSITIONING_OPTION_ON SEMICOLON
-                                WHERE_CLAUSE    POSITIONING_LINE IDENTIFIER SEMICOLON
-                                                POSITIONING_COLUMN IDENTIFIER SEMICOLON] |
-                             [POSITIONING_OPTION_OFF SEMICOLON]]?
-                            [DEFAULT_ACTION_OPTION IDENTIFIER SEMICOLON]?
+                            [LEXER_OPTION IDENTIFIER {setLexerRoutine(yytext);} SEMICOLON]?
+                            [LEXEME_OPTION IDENTIFIER {setLexemeName(yytext);} SEMICOLON]?
+                            [[POSITIONING_OPTION_ON {setPositioningOption(TRUE);} SEMICOLON
+                                WHERE_CLAUSE    POSITIONING_LINE IDENTIFIER {setPositioningLineName(yytext);} SEMICOLON
+                                                POSITIONING_COLUMN IDENTIFIER {setPositioningColumneName(yytext);} SEMICOLON] |
+                             [POSITIONING_OPTION_OFF {setPositioningOption(FALSE);} SEMICOLON]]?
+                            [DEFAULT_ACTION_OPTION IDENTIFIER {setDefaultActionRoutineName(yytext);} SEMICOLON]?
                         ;
 
 DefinesSection          :

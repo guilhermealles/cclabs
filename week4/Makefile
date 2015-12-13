@@ -1,8 +1,10 @@
 all: scannergenerator
 
-scannergenerator: parser lexer
-	gcc -o scannergenerator parser.o lexer.o -ll -lm -lfl
+scannergenerator: parser lexer scanner_specification.o
+	gcc -o scannergenerator parser.o scanner_specification.o lexer.o -ll -lm -lfl
 
+scanner_specification.o: scanner_specification.c scanner_specification.h
+	gcc -c scanner_specification.c
 
 parser: grammar.g
 	cp grammar.g parser.g

@@ -1,6 +1,9 @@
 #ifndef SCANNER_SPECIFICATION
 #define SCANNER_SPECIFICATION
 
+#define TRUE 1
+#define FALSE 0
+
 typedef struct ScannerOptions{
     char *lexer_routine;
     char *lexeme_name;
@@ -17,5 +20,6 @@ void setPositioningOption(int option);
 void setPositioningLineName (char *name);
 void setPositioningColumneName (char *name);
 void setDefaultActionRoutineName(char *routine_name);
+void printOptions();
 
 #endif
