@@ -1,14 +1,14 @@
 all: scannergenerator
 
 scannergenerator: parser lexer scanner_specification.o
-	gcc -o scannergenerator parser.o scanner_specification.o lexer.o -ll -lm -lfl
+	gcc -o scannergenerator parser.o scanner_specification.o lexer.o -ll -lm
 
 scanner_specification.o: scanner_specification.c scanner_specification.h
 	gcc -c scanner_specification.c
 
 parser: grammar.g
 	cp grammar.g parser.g
-	/home/vagrant/src/LLnextgen-0.5.5/LLnextgen parser.g
+	../LLnextgen-0.5.5/LLnextgen parser.g
 	gcc -c parser.c
 	rm -f parser.g
 
