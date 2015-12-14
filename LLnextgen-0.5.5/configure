@@ -1,0 +1,171 @@
+#!/bin/sh
+# Copyright (C) 2006,2008 G.P. Halkes
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Set zsh to emulate sh (otherwise all kinds of eval's wont work)
+[ -n "${ZSH_VERSION}" ] && emulate sh
+
+#==============================
+# Functions
+#==============================
+error() {
+	echo "$@"
+	exit 1
+}
+
+check() {
+	if "$@" ; then
+		:
+	else
+		error "Error executing $@. Aborting."
+	fi
+}
+
+check_message() {
+	printf "$@"
+	echo "----------------------------------">> ../config.log
+	echo "$@" >> ../config.log
+}
+
+check_message_result() {
+	echo "$@"
+	echo "$@" >> ../config.log
+}
+
+checkConfig() {
+	check_message "Checking for $1... "
+	shift
+	echo "Running '${MAKE} $@ test'" >> ../config.log
+
+	rm -rf test >/dev/null 2>&1
+	${MAKE} "$@" test >> ../config.log 2>&1 && check_message_result "yes" && { createConfig .. "$@" ; rm -rf Makefile test >/dev/null 2>&1 ; exit 0 ; }
+	check_message_result "no"
+	rm -rf test >/dev/null 2>&1
+}
+
+createConfig() {
+	DIRECTORY="$1"
+	shift
+
+	if [ -z "${DIRECTORY}" ] ; then
+		DIRECTORY=.
+	fi
+
+	(
+		if [ -n "${PREFIX}" ] ; then
+			ESCAPED_PREFIX=`echo "${PREFIX}" | sed 's/\//\\\\\//g'`
+			echo "s/^prefix=.*/prefix=${ESCAPED_PREFIX}/g"
+		fi
+
+		if [ -n "${CFLAGS}" ] ; then
+			ESCAPED_CFLAGS=`echo "${CFLAGS}" | sed 's/\//\\\\\//g'`
+			echo "s/^CFLAGS=.*/CFLAGS=${ESCAPED_CFLAGS}/g"
+		fi
+
+		for SETTING in "$@"
+		do
+			NAME=`echo "${SETTING}" | sed 's/=.*/=/g'`
+			ESCAPED_SETTING=`echo "${SETTING}" | sed 's/\//\\\\\//g'`
+			echo "s/^${NAME}.*/${ESCAPED_SETTING}/g"
+		done
+		[ -z "${CC}" ] || echo "/^\\.POSIX:/a\\
+CC=${CC}"
+		[ -z "${LDFLAGS}" ] || echo "/^\\.POSIX:/a\\
+LDFLAGS=${LDFLAGS}"
+		[ -z "${LDLIBS}" ] || echo "/^\\.POSIX:/a\\
+LDLIBS=${LDLIBS}"
+	) > sedscript
+	cat "${DIRECTORY}/Makefile.in" | sed -f sedscript > "${DIRECTORY}/Makefile"
+	rm -rf sedscript >/dev/null 2>&1
+	true
+}
+
+#==============================
+# Setup
+#==============================
+
+for PARAM
+do
+	case "${PARAM}" in
+		-h|--help)
+			cat <<EOF
+Usage: configure [--prefix=<dir>] [<var>=<value>]
+
+  --prefix=<dir>     Prefix for installation [/usr/local]
+
+Environment variables that tune build:
+  MAKE        Make program to use [make]
+  CC          C-compiler to use (default determined by make)
+  CFLAGS      C-compiler flags to use [-O2]
+  LDFLAGS     Linker flags to use (default determined by make)
+  LDLIBS      Extra libraries to link
+  PREFIX      See --prefix=<dir>
+
+Note: Environment variables may also be specified as parameters.
+EOF
+		exit 0
+		;;
+		--prefix=*)
+			PREFIX=`echo "${PARAM}" | sed 's/^--prefix=//'`
+		;;
+		-*=*)
+			error "Error on commandline: ${PARAM}"
+		;;
+		*=*)
+			name=`echo "${PARAM}" | sed 's/=.*//'`
+			value=`echo "${PARAM}" | sed 's/^[^=]*=//'`
+			eval "${name}"="\"${value}\""
+		;;
+		*)
+			error "Error on commandline: ${PARAM}"
+		;;
+	esac
+done
+
+check cd config
+
+if [ -z "${MAKE}" ] ; then
+	MAKE=make
+fi
+
+echo "Configuration test log created at `date`" > ../config.log
+echo "-- configure called with $0 $@" >> ../config.log
+
+unset SETTINGS
+[ -z "${LDLIBS}" ] || SETTINGS="LDLIBS=${LDLIBS} ${SETTINGS}"
+[ -z "${LDFLAGS}" ] || SETTINGS="LDFLAGS=${LDFLAGS} ${SETTINGS}"
+[ -z "${CFLAGS}" ] || SETTINGS="CFLAGS=${CFLAGS} ${SETTINGS}"
+[ -z "${CC}" ] || SETTINGS="CC=${CC} ${SETTINGS}"
+
+[ -n "${SETTINGS}" ] && check_message_result "Using settings ${SETTINGS}"
+
+createConfig .
+
+check_message "Checking for working make (${MAKE})... "
+rm -rf test >/dev/null 2>&1
+echo "Running '${MAKE} test'" >> ../config.log
+${MAKE} test >> ../config.log 2>&1 || error "${MAKE} failed on sanity check. See config.log."
+check_message_result "yes"
+
+#==============================
+# Regex testing
+#==============================
+
+checkConfig "POSIX regex" REGEX=POSIX
+checkConfig "POSIX regex in -lregex" REGEX=POSIX REGEXLIBS=-lregex
+checkConfig "old POSIX regex" REGEX=OLDPOSIX
+checkConfig "old POSIX regex in -lregex" REGEX=OLDPOSIX REGEXLIBS=-lregex
+checkConfig "PCRE POSIX compatiblity API" REGEX=PCRE REGEXLIBS=-lpcreposix
+
+check_message_result "Regex support disabled"
+createConfig .. REGEX=

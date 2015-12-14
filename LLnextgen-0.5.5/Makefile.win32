@@ -1,0 +1,61 @@
+# Copyright (C) 2006,2008 G.P. Halkes
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# C-compiler flags
+CFLAGS=/O2
+
+# Regular expression support
+# REGEX should have one of the values POSIX, OLDPOSIX, PCRE, or be unset. All
+#  the named options use the POSIX regular expression API. POSIX includes the
+#  "regex.h" header file, OLDPOSIX also includes the "sys/types.h" header file,
+#  and PCRE uses the "pcreposix.h" header file. The latter also requires
+#  linking with pcreposix.lib for proper operation.
+# REGEXLIBS should provide any options necessary for linking all the libraries
+#  required for the regular expression code
+REGEX=
+REGEXLIBS=
+
+
+CSOURCES=src\argcount.c src\clash.c src\depend.c src\freeData.c src\generate.c src\generateCommon.c src\generateLLgenStyle.c src\generateTS.c src\globals.c src\io.c src\list.c src\main.c src\nonRuleAnalysis.c src\option.c src\os.c src\printInput.c src\ruleAnalysis.c src\scope.c src\set.c src\traceTokens.c src\clashStrings.c
+LSOURCES=src\lexer.l
+GSOURCES=src\grammar.g
+OBJECTS=$(CSOURCES:.c=.obj) $(LSOURCES:.l=.obj) $(GSOURCES:.g=.obj)
+
+all: LLnextgen
+
+clean:
+	del src\*.obj src\grammar.c src\grammar.h src\lexer.c
+
+dist-clean: clean
+	del LLnextgen.exe
+
+LLnextgen: $(OBJECTS)
+	$(CC) /FeLLnextgen $(OBJECTS) $(LDLIBS) $(REGEXLIBS)
+
+src\lexer.c: src\lexer.c.dist
+	copy src\lexer.c.dist src\lexer.c
+
+src\grammar.c: src\grammar.c.dist
+	copy src\grammar.c.dist src\grammar.c
+
+src\grammar.h: src\grammar.h.dist
+	copy src\grammar.h.dist src\grammar.h
+
+src\grammar.obj: src\grammar.h
+src\io.obj: src\grammar.h
+src\lexer.obj: src\grammar.h
+src\main.obj: src\grammar.h
+src\printInput.obj: src\grammar.h
+
+.c.obj:
+	$(CC) $(CFLAGS) /DREGEX=$(REGEX) /c $< /Fo$@

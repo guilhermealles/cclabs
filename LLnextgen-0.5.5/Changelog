@@ -1,0 +1,206 @@
+Version 0.5.5:
+    Fixed bugs:
+    - The LLscnt_ array for thread-safe parsers was dimensioned incorrectly.
+    - Handling of string escapes was incorrect for unknown escapes.
+
+Version 0.5.4:
+    Fixed bugs:
+    - LLsymb is now properly initialized before the first call to LLread and
+      the lexer
+
+Version 0.5.3:
+    New features:
+    - added possibility to mark a code section with %top, which will cause it
+      to be included at the top of the output
+
+Version 0.5.2:
+    Fixed bugs:
+    - correct check for overflow in addition, which caused incorrect length
+      calculations under some compiler optimisations. The user visible result
+      was that a "Recursion in default for non-terminal" error was reported
+      where there should be none
+    - octal escapes between 300 and 377 are now properly parsed, as well as
+      two character octal escapes between \30 and \77
+
+Version 0.5.1:
+    New features:
+    - variables created to hold return values are now initialised the same way
+      that LLretval is initialised. This prevents uninitialised use of these
+      values and is better aligned with user expectation.
+    - warnings are generated for some cases in which it is clear that a
+      returned value is not used in subsequent code.
+
+Version 0.5.0:
+    New features:
+    - a new repetition operator (..?) is implemented. With it, users can
+      specify that the last element in a repeating term is optional for the
+      last repetition of that term.
+    - an option to specify the extensions of the generated files was
+      added.
+
+    Fixed bugs:
+    - in case of a %while controlled repetition conflict in a ? repetition,
+      the sets controlling error recovery would not be adjusted correctly if
+      the %while expression evaluated to false
+    - when tracing tokens the EOFILE token resulting from %start directives
+      would not be printed
+
+Version 0.4.1:
+    New features:
+    - a new element, the back-reference operator is introduced. By using ...
+      elements preceding the current term in its enclosing term are copied in
+      its place. Most usefull for comma-separated lists and similar constructs
+
+    Fixed bugs:
+    - moved initialisation of LLretval to before user supplied declarations,
+      such that assignments to LLretval like: rule<int> { LLretval = 1; }: ...
+      will not be undone
+    - return value overrides specified on tokens will now trigger an error
+
+Version 0.4.0:
+    New features:
+    - return values for rules
+    - the --depend option has an extra modifier phony, that adds phony targets
+      for all the dependencies to avoid make problems when renaming or
+      removing dependencies
+    - the --help option does not show all options by default anymore. An
+      optional argument has been added to --help to select which options to
+      show
+    - detection of symbols that are likely to clash with generated symbols
+    - LLindex and LLsets internal variables are now const, to make sure they
+      don't get overwritten and to allow more compiler optimizations
+
+    Fixed bugs:
+    - removed a typo, which caused erroneous arguments to --dump-tokens to
+      report an erroneous argument to --depend
+    - fixed typos in the output --dump-llmessage
+    - added volatile keyword to local variables in the generated parser if
+      --abort and --reentrant are used because setjmp/longjmp is not
+      guaranteed to correctly save local variables otherwise
+    - printing of contains sets has been restored for --verbose=3
+    - LLnextgen will no longer stop if a 0 byte is found in the input
+
+Version 0.3.3:
+    Fixed bugs:
+    - using characters in the range 0x80 - 0xff in the input could cause
+      segmentation faults
+
+Version 0.3.2:
+    New features:
+    - an option to facilitate gettext use by adding macros in the symbol table
+      definition for all user defined strings, and a call to gettext in
+      LLgetSymbol
+
+    Fixed bugs:
+    - minor issues with symbol table generation
+    - using --generate-lexer-wrapper caused compile errors for generated
+      parser due to undeclared symbol
+
+Version 0.3.1:
+    Fixed bugs:
+    - the configure script has been fixed
+
+Version 0.3.0:
+    New features:
+    - an option to specify a regular expression for which token definitions are
+      automatically generated, plus an option to dump the automatically
+      generated token definitions [Only available if the POSIX regular
+      expression API is available on your platform]
+    - more error messages are now generated in input-line order
+    - fewer aborts for "ambiguous input", because several errors are now
+      considered non-critical for further analysis
+    - new implementation of LLreissue that automatically saves the token to be
+      reissued
+    - include guards in generated header file
+    - defines added to header file to allow for version testing
+    - an option to generate thread-safe parsers
+
+    NOTE: the new LLreissue implementation is incompatible with previous
+    versions of LLnextgen. If you use LLreissue, and do not use the generated
+    lexical analyser wrapper, you will have to adapt your code. See
+    documentation for details.
+
+    Fixed bugs:
+    - fixed bug in handling of \x escape sequences in include-file names and
+      option strings
+    - fixed bug that would stop LLnextgen reading the trailing portiong of a
+      file that included another but was missing a ';' after the %include
+      directive
+
+Version 0.2.5:
+    New features:
+    - added option to generate dependency information about the generated files
+    - added option to dump top-level C-code to allow the C preprocessor to
+      generate dependency information for the generated files
+
+    Fixed bugs:
+    - added warning about using --generate-lexer-wrapper and --reentrant at the
+      same time.
+    - removed double warnings about certain combinations of options
+    - reduced the size of the LLscnt array by a factor LL_SSETS
+    - fixed error about unterminated comments for line comments at the end
+      of a file
+
+Version 0.2.4:
+    Fixed bugs:
+    - finding the base name of file names on MS-Windows was implemented
+      incorrectly. It assumed that \ was the only directory separator, while
+      / is also allowed.
+
+Version 0.2.3:
+    New features:
+    - detailed suppression of warnings. NOTE: the option --no-warn-eof has been
+      removed in favour of the new warning suppression mechanism
+
+    Fixed bugs:
+    - warning suppression wasn't implemented for most warnings. This has now
+      been fixed
+    - a warning is now issued regarding use of --reentrant if multiple %start
+      directives are used in one grammar. The warning can be suppressed with
+      --suppress-warnings=multiple-parser
+
+Version 0.2.2:
+    Fixed bugs:
+    - long options would be recognised even if only a leading substring would
+      be specified
+    - the alternation conflict example was corrected
+
+Version 0.2.1:
+    Fixed bugs:
+    - fixed %first code for sets with one or more tokens
+
+Version 0.2:
+    New features
+    - symbol table generation
+    - dumping of lexer wrapper
+    - dumping of default LLmessage
+    - LLabort
+    - %include
+    - %options
+
+    Fixed bugs:
+    - lexer-wrapper and default LLmessage compile problems
+    - prevent potential name space clobbering with token names by moving the
+      #include directive
+    - defered reading of next token for
+      [ 'a' | 'b' ]
+      constructions so that a following action can assume the token text to be
+      valid (LLgen compatibility fix)
+    - labels were generated incorrectly when using a %while to solve
+      repetition conflicts in + repetitions, leading to uncompilable code
+    - file name handling on MS Windows platform
+    - symbol renaming bugs
+    - removed spurious error messages about:
+      - alternatives never being chosen, while there was only one (be it empty)
+        alternative in a rule
+      - Terms without symbols
+    - fixed %first code for empty sets and sets with only one token
+    - fixed add length routine, so it now takes the factor into account. This
+      corrects an error in default alternative determination for alternatives
+      including a fixed repetition term with a repetition count larger than 1
+    - many minor bugs
+
+Version 0.1.1:
+    Fixed bugs:
+    - Now print warning message at top of Lpars.c and Lpars.h
+    - bug fix in token tracking code, which caused erroneous error messages

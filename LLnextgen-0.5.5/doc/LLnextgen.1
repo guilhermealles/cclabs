@@ -1,0 +1,341 @@
+.\" Copyright (C) 2005-2008 G.P. Halkes
+.\" This program is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License version 3, as
+.\" published by the Free Software Foundation.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.TH "LLnextgen" "1" "31-12-2011" "Version 0.5.5" "LLnextgen parser generator"
+.hw /usr/share/doc/LLnextgen-0.5.5 http://os.ghalkes.nl/LLnextgen
+
+.SH NAME
+\fBLLnextgen\fP \- an Extended-LL(1) parser generator
+.SH SYNOPSIS
+
+\fBLLnextgen\fP [\fIOPTIONS\fP] [\fIFILES\fP]
+.SH DESCRIPTION
+
+\fBLLnextgen\fP is a (partial) reimplementation of the \fBLLgen\fP ELL(1)
+parser generator created by D.\~Grune and C.J.H.\~Jacobs (note: this is not the
+same as the \fBLLgen\fP parser generator by Fischer and LeBlanc). It takes an
+EBNF-like description of the grammar as input(s), and produces a parser in C.
+.PP
+Input files are expected to end in .g. The output files will have .g removed
+and .c and .h added. If the input file does not end in .g, the extensions .c
+and .h will simply be added to the name of the input file. Output files can also
+be given a different base name using the option \-\-base\-name (see below).
+.SH OPTIONS
+
+\fBLLnextgen\fP accepts the following options:
+.IP "\fB\-c\fP, \fB\-\-max\-compatibility\fP"
+Set options required for maximum source-level compatibility. This is different
+from running as \fBLLgen\fP, as all extensions are still allowed. LLreissue and
+the prototypes in the header file are still generated. This option turns on the
+\fB\-\-llgen\-arg\-style\fP, \fB\-\-llgen\-escapes\-only\fP and
+\fB\-\-llgen\-output\-style\fP options.
+.IP "\fB\-e\fP, \fB\-\-warnings\-as\-errors\fP"
+Treat warnings as errors.
+.IP "\fB\-E\fP\fInum\fP, \fB\-\-error\-limit\fP=\fInum\fP"
+Set the maximum number of errors, before \fBLLnextgen\fP aborts. If \fInum\fP
+is set 0, the error limit is set to infinity. This is to override the error
+limit option specified in the grammar file.
+.IP "\fB\-h\fP[\fIwhich\fP], \fB\-\-help\fP[=\fIwhich\fP]"
+Print out a help message, describing the options. The optional \fIwhich\fP
+argument allows selection of which options to print. \fIwhich\fP can be set to
+all, depend, error, and extra.
+.IP "\fB\-V\fP, \fB\-\-version\fP"
+Print the program version and copyright information, and exit.
+.IP "\fB\-v\fP[\fIlevel\fP], \fB\-\-verbose\fP[=\fIlevel\fP]"
+Increase (without explicit level) or set (with explicit level) the verbosity
+level. \fBLLnextgen\fP uses this option differently than \fBLLgen\fP. At
+level\~1, \fBLLnextgen\fP will output traces of the conflicts to standard
+error. At level\~2, \fBLLnextgen\fP will also write a file named LL.output with
+the rules containing conflicts. At level\~3, \fBLLnextgen\fP will include the
+entire grammar in LL.output.
+.br
+\fBLLgen\fP will write the LL.output file from level\~1, but cannot generate
+conflict traces. It also has an intermediate setting between \fBLLnextgen\fP
+levels\~2 and\~3.
+.IP "\fB\-w\fP[\fIwarnings\fP], \fB\-\-suppress\-warnings\fP[=\fIwarnings\fP]"
+Suppress all or selected warnings. Available warnings are: arg-separator,
+option-override, unbalanced-c, multiple-parser, eofile, unused[:<identifier>],
+datatype and unused-retval. The unused warning can suppress all warnings about
+unused tokens and non-terminals, or can be used to suppress warnings about
+specific tokens or non-terminals by adding a colon and a name. For example,
+to suppress warning messages about FOO not being used, use
+\fB\-wunused:FOO\fP. Several comma separated warnings can be specified with
+one option on the command line.
+.IP "\fB\-\-abort\fP"
+Generate the LLabort function.
+.IP "\fB\-\-base\-name\fP=\fIname\fP"
+Set the base name for the output files. Normally \fBLLnextgen\fP uses the name
+of the first input file without any trailing\~.g as the base name. This option
+can be used to override the default. The files created will be \fIname\fP.c
+and \fIname\fP.h.
+This option cannot be used in combination with
+\fB\-\-llgen\-output\-style\fP.
+.IP "\fB\-\-depend\fP[=\fImodifiers\fP]"
+Generate dependency information to be used by the \fBmake\fP(1) program. The
+modifiers can be used to change the make targets (targets:<targets>, and
+extra-targets:<targets>) and the output (file:<file>). The default are to use
+the output names as they would be created by running with the same arguments as
+targets, and to output to standard output. Using the targets modifier, the list
+of targets can be specified manually. The extra-targets modifier allows targets
+to be added to the default list of targets. Finally, the phony modifier will add
+phony targets for all dependencies to avoid \fBmake\fP(1) problems when removing
+or renaming dependencies. This is like the \fBgcc\fP(1) -MP option.
+.IP "\fB\-\-depend-cpp\fP"
+Dump all top-level C-code to standard out. This can be used to generate
+dependency information for the generated files by piping the output from
+\fBLLnextgen\fP through the C preprocessor with the appropriate options.
+.IP "\fB\-\-dump\-lexer\-wrapper\fP"
+Write the lexer wrapper function to standard output, and exit.
+.IP "\fB\-\-dump\-llmessage\fP"
+Write the default LLmessage function to standard output, and exit.
+.IP "\fB\-\-dump\-tokens\fP[=\fImodifier\fP]"
+Dump %token directives for unknown identifiers that match the
+\fB\-\-token\-pattern\fP pattern. The default is to generate a single %token
+directive with all the unknown identifiers separated by comma's. This default
+can be overridden by \fImodifier\fP. The modifier \fIseparate\fP produces a
+separate %token directive for each identifier, while \fIlabel\fP produces a
+%label directive. The text of the label will be the name of the identifier.
+If the \fIlabel\fP modifier and the \fB\-\-lowercase\-symbols\fP option are
+both specified the label will contain only lowercase characters.
+.br
+Note: this option is not always available. It requires the POSIX regex API. If
+the POSIX regex API is not available on your platform, or the \fBLLnextgen\fP
+binary was compiled without support for the API, you will not be able to use
+this option.
+.IP "\fB\-\-extensions\fP=\fIlist\fP"
+Specify the extensions to be used for the generated files. The list must be comma
+separated, and should not contain the . before the extension. The first item in
+the list is the C source file and the second item is the header file. You can
+omit the extension for the C source file and only specify the extension for the
+header file.
+.IP "\fB\-\-generate\-lexer\-wrapper\fP[=\fIyes|no\fP]"
+Indicate whether to generate a wrapper for the lexical analyser. As
+\fBLLnextgen\fP requires a lexical analyser to return the last token returned
+after detecting an error which requires inserting a token to repair, most
+lexical analysers require a wrapper to accommodate \fBLLnextgen\fP. As it is
+identical for almost each grammar, \fBLLnextgen\fP can provide one. Use
+\fB\-\-dump\-lexer\-wrapper\fP to see the code. If you do specifiy this option
+\fBLLnextgen\fP will generate a warning, to help remind you that a wrapper is
+required.
+.br
+If you do not want the automatically generate wrapper you should
+specifiy this option followed by \fB=no\fP.
+.IP "\fB\-\-generate\-llmessage\fP"
+Generate an \fILLmessage\fP function. \fBLLnextgen\fP requires programs to
+provide a function for informing the user about errors in the input. When
+developing a parser, it is often desirable to have a default \fILLmessage\fP.
+The provided \fILLmessage\fP is very simple and should be replaced by a more
+elaborate one, once the parser is beyond the first testing phase. Use
+\fB\-\-dump\-llmessage\fP to see the code. This option automatically
+turns on \fB\-\-generate\-symbol\-table\fP.
+.IP "\fB\-\-generate\-symbol\-table\fP"
+Generate a symbol table. The symbol table will contain strings for all
+tokens and character literals. By default, the symbol table contains the token
+name as specified in the grammar. To change the string, for both tokens and
+character literals, use the %label directive.
+.IP "\fB\-\-gettext\fP[=\fImacro,guard\fP]"
+Add gettext support. A macro call is added around symbol table entries
+generated from %label directives. The macro will expand to the string itself.
+This is meant to allow \fBxgettext\fP(1) to extract the strings. The default is
+N_, because that is what most people use. A guard will be included such that
+compilation without gettext is possible by not defining the guard. The guard
+is set to USE_NLS by default. Translations will be done automatically in
+LLgetSymbol in the generated parser through a call to gettext.
+.IP "\fB\-\-keep\-dir\fP"
+Do not remove directory component of the input file-name when creating the
+output file-name. By default, outputs are created in the current directory.
+This option will generate the output in the directory of the input.
+.IP "\fB\-\-llgen\-arg\-style\fP"
+Use semicolons as argument separators in rule headers. \fBLLnextgen\fP uses
+comma's by default, as this is what ANSI C does.
+.IP "\fB\-\-llgen\-escapes\-only\fP"
+Only allow the escape sequences defined by \fBLLgen\fP in character literals.
+By default \fBLLnextgen\fP also allows \\a, \\v, \\?, \\", and hexadecimal
+constants with \\x.
+.IP "\fB\-\-llgen\-output\-style\fP"
+Generate one .c output per input, and the files Lpars.c and Lpars.h, instead of
+one .c and one .h file based on the name of the first input.
+.IP "\fB\-\-lowercase\-symbols\fP"
+Convert the token names used for generating the symbol table to lower case.
+This only applies to tokens for which no %label directive has been specified.
+.IP "\fB\-\-no\-allow\-label\-create\fP"
+Do not allow the %label directive to create new tokens. Note that this requires
+that the token being labelled is either a character literal or a %token
+directive creating the named token has preceded the %label directive.
+.IP "\fB\-\-no\-arg\-count\fP"
+Do not check argument counts for rules. LLnextgen checks whether a rule is
+used with the same number of arguments as it is defined. LLnextgen also checks
+that any rules for which a %start directive is specified, the number of
+arguments is 0.
+.IP "\fB\-\-no\-eof\-zero\fP"
+Do not use 0 as end-of-file token. \fB(f)lex\fP(1) uses 0 as the
+end-of-file token. Other lexical-analyser generators may use \-1, and may
+use 0 for something else (e.g. the nul character).
+.IP "\fB\-\-no\-init\-llretval\fP"
+Do not initialise \fBLLretval\fP with 0 bytes. Note that you have to take care
+of initialisation of \fBLLretval\fP yourself when using this option.
+.IP "\fB\-\-no\-line\-directives\fP"
+Do not generate \fI#line\fP directives in the output. This means all errors will
+be reported relative to the output file. By default \fBLLnextgen\fP generates
+\fI#line\fP directives to make the C compiler generate errors relative to the
+\fBLLnextgen\fP input file.
+.IP "\fB\-\-no\-llreissue\fP"
+Do not generate the \fILLreissue\fP variable, which is used to indicate when a
+token should be reissued by the lexical analyser.
+.IP "\fB\-\-no\-prototypes\-header\fP"
+Do not generate prototypes for the parser and other functions in the header
+file.
+.IP "\fB\-\-not\-only\-reachable\fP"
+Do not only analyse reachable rules. \fBLLnextgen\fP by default does not take
+unreachable rules into account when doing conflict analysis, as these can cause
+spurious conflicts. However, if the unreachable rules will be used in the
+future, one might already want to be notified of problems with these rules.
+\fBLLgen\fP by default does analyse unreachable rules.
+.br
+Note: in the case where a rule is unreachable because the only alternative of
+another reachable rule that mentions it is never chosen (because of a %avoid
+directive), the rule is still deemed reachable for the analysis. The only way
+to avoid this behaviour is by doing the complete analysis twice, which is an
+excessive amount of work to do for a very rare case.
+.IP "\fB\-\-reentrant\fP"
+Generate a reentrant parser. By default, \fBLLnextgen\fP generates
+non-reentrant parsers. A reentrant parser can be called from itself, but not
+from another thread. Use \-\-thread\-safe to generate a thread-safe parser.
+.br
+Note that when multiple parsers are specified in one grammar (using multiple
+%start directives), and one of these parsers calls another, either the
+\-\-reentrant option or the \-\-thread-safe option is also required. If these
+parsers are only called when none of the others is running, the option is not
+necessary.
+.br
+Use only in combination with a reentrant lexical analyser.
+.IP "\fB\-\-show\-dir\fP"
+Show directory names of source files in error and warning messages. These are
+usually omitted for readability, but may sometimes be necessary for tracing
+errors.
+.IP "\fB\-\-thread\-safe\fP"
+Generate a thread-safe parser. Thread-safe parsers can be run in parallel in
+different threads of the same program. The interface of a thread-safe parser is
+different from the regular (and then reentrant) version. See the detailed manual
+for more details.
+.IP "\fB\-\-token\-pattern\fP=\fIpattern\fP"
+Specify a regular expression to match with unknown identifiers used in the
+grammar. If an unknown identifier matches, \fBLLnextgen\fP will generate a
+token declaration for the identifier. This option is primarily implemented to
+aid in the first stages of development, to allow for quick testing for conflicts
+without having to specify all the tokens yet. A list of tokens can be generated
+with the \fB\-\-dump\-tokens\fP option.
+.br
+Note: this option is not always available. It requires the POSIX regex API. If
+the POSIX regex API is not available on your platform, or the \fBLLnextgen\fP
+binary was compiled without support for the API, you will not be able to use
+this option.
+.PP
+By running \fBLLnextgen\fP using the name \fBLLgen\fP, \fBLLnextgen\fP goes
+into \fBLLgen\fP-mode. This is implemented by turning off all default extra
+functionality like \fILLreissue\fP, and disallowing all extensions to the
+\fBLLgen\fP language. When running as \fBLLgen\fP, \fBLLnextgen\fP accepts the
+following options from \fBLLgen\fP:
+.IP "\fB\-a\fP"
+Ignored. \fBLLnextgen\fP only generates ANSI C.
+.IP "\fB\-h\fP\fInum\fP"
+Ignored. \fBLLnextgen\fP leaves optimisation of jump tables entirely
+up to the C\-compiler.
+.IP "\fB\-j\fP[\fInum\fP]"
+Ignored. \fBLLnextgen\fP leaves optimisation of jump tables
+entirely up to the C\-compiler.
+.IP "\fB\-l\fP[\fInum\fP]"
+Ignored. \fBLLnextgen\fP leaves optimisation of jump tables entirely
+up to the C\-compiler.
+.IP "\fB\-v\fP"
+Increase the verbosity level. See the description of the \fB\-v\fP option
+above for details.
+.IP "\fB\-w\fP"
+Suppress all warnings.
+.IP "\fB\-x\fP"
+Ignored. \fBLLnextgen\fP will only generate token sets in LL.output.
+The extensive error-reporting mechanisms in \fBLLnextgen\fP make this feature
+obsolete.
+.PP
+\fBLLnextgen\fP cannot create parsers with non-correcting error-recovery.
+Therefore, using the \fB\-n\fP or \fB\-s\fP options will cause \fBLLnextgen\fP
+to print an error message and exit.
+.SH COMPATIBILITY WITH LLGEN
+
+At this time the basic \fBLLgen\fP functionality is implemented. This includes
+everything apart from the extended user error-handling with the %onerror
+directive and the non-correcting error-recovery.
+.PP
+Although I've tried to copy the behaviour of \fBLLgen\fP accurately, I have
+implemented some aspects slightly differently. The following is a list of the
+differences in behaviour between \fBLLgen\fP and \fBLLnextgen\fP:
+.IP "\fB\(bu\fP"
+\fBLLgen\fP generated both K&R style C code and ANSI C code. \fBLLnextgen\fP
+only supports generation of ANSI C code.
+.IP "\fB\(bu\fP"
+There is a minor difference in the determination of the default choices.
+\fBLLnextgen\fP simply chooses the first production with the shortest possible
+terminal production, while \fBLLgen\fP also takes the complexity in terms of
+non-terminals and terms into account. There is also a minor difference when
+there is more than one shortest alternative and some of them are marked with
+%avoid. Both differences are not very important as the user can specify
+which alternative should be the default, thereby circumventing the
+differences in the algorithms.
+.IP "\fB\(bu\fP"
+The default behaviour of generating one output C file per input and Lpars.c
+and Lpars.h has been changed in favour of generating one\~.c file and one\~.h
+file. The rationale given for creating multiple output files in the first
+place was that it would reduce the compilation time for the generated
+parser. As computation power has become much more abundant this feature is
+no longer necessary, and the difficult interaction with the make program
+makes it undesirable. The \fBLLgen\fP behaviour is still supported through a
+command-line switch.
+.IP "\fB\(bu\fP"
+in \fBLLgen\fP one could have a parser and a %first macro with the same name.
+\fBLLnextgen\fP forbids this, as it leads to name collisions in the new file
+naming scheme. For the old \fBLLgen\fP file naming scheme it could also easily
+lead to name collisions, although they could be circumvented by not mentioning
+the parser in any of the C code in the\~.g files.
+.IP "\fB\(bu\fP"
+\fBLLgen\fP names the labels it generates L_X, where X is a number.
+\fBLLnextgen\fP names these LL_X.
+.IP "\fB\(bu\fP"
+\fBLLgen\fP parsers are always reentrant. As this feature is not used very
+often, \fBLLnextgen\fP parsers are non-reentrant unless the option
+\fB\-\-reentrant\fP is used.
+.PP
+Furthermore, \fBLLnextgen\fP has many extended features, for easier development.
+.SH BUGS
+
+If you think you have found a bug, please check that you are using the latest
+version of \fBLLnextgen\fP [http://os.ghalkes.nl/LLnextgen]. When reporting
+bugs, please include a minimal grammar that demonstrates the problem.
+.SH AUTHOR
+
+G.P. Halkes <llnextgen@ghalkes.nl>
+.SH COPYRIGHT
+
+Copyright \(co 2005-2008 G.P. Halkes
+.br
+LLnextgen is licensed under the GNU General Public License version 3.
+.br
+For more details on the license, see the file COPYING in the documentation
+directory. On Un*x systems this is usually /usr/share/doc/LLnextgen-0.5.5.
+.SH SEE ALSO
+
+\fBLLgen\fP(1), \fBbison\fP(1), \fByacc\fP(1), \fBlex\fP(1), \fBflex\fP(1).
+.PP
+A detailed manual for \fBLLnextgen\fP is available as part of the distribution.
+It includes the syntax for the grammar files, details on how to use the
+generated parser in your programs, and details on the workings of the generated
+parsers. This manual can be found in the documentation directory. On Un*x
+systems this is usually /usr/share/doc/LLnextgen-0.5.5.

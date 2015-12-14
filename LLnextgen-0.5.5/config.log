@@ -1,0 +1,12 @@
+Configuration test log created at Mon Dec 14 08:57:42 CET 2015
+-- configure called with ./configure 
+----------------------------------
+Checking for working make (make)... 
+Running 'make test'
+cc -O2 -I../src -DREGEX=  -o test test.c  
+yes
+----------------------------------
+Checking for POSIX regex... 
+Running 'make REGEX=POSIX test'
+cc -O2 -I../src -DREGEX=POSIX  -o test test.c  
+yes

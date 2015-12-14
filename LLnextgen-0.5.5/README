@@ -1,0 +1,164 @@
+Introduction
+============
+
+LLnextgen is a (partial) reimplementation of the LLgen Extended-LL(1) parser
+generator [http://www.cs.vu.nl/~ceriel/LLgen.html] created by D. Grune and
+C.J.H. Jacobs which is part of the Amsterdam Compiler Kit (ACK). LLnextgen is
+Licensed under the GNU General Public License version 3. See the file COPYING
+for details. Alternatively, see <http://www.gnu.org/licenses/>.
+
+Note: To add to the confusion, there exists or existed another program called 
+LLgen, which is an LL(1) parser generator. It was created by Fischer and
+LeBlanc.
+
+Motivation
+==========
+
+I like the ideas embodied in the LLgen program and I find the way to specify
+grammars easy and intuitive. However, it turns out LLgen contains a number of
+more and less serious bugs that make it annoying to work with.
+
+One option of course was to fix the LLgen program, but it turned out that it
+was not written with maintainability in mind. Furthermore, it was written in
+a time when memory was expensive and therefore limited. This results in a
+number of hacks that complicate maintenance even further. Thus, I decided to
+do a rewrite. The rewrite also allowed several features to be implemented
+which LLgen was missing (in my opinion anyway).
+
+Compatibility (issues)
+======================
+
+At this time the basic LLgen functionality is implemented. This includes
+everything apart from the extended user error-handling with the %onerror
+directive and the non-correcting error-recovery.
+
+Although I've tried to copy the behaviour of LLgen accurately, I have
+implemented some aspects slightly differently. The following is a list of the
+differences in behaviour between LLgen and LLnextgen:
+- LLgen generated both K&R style C code and ANSI C code. LLnextgen only
+  supports generation of ANSI C code.
+- There is a minor difference in the determination of the default choices.
+  LLnextgen simply chooses the first production with the shortest possible 
+  terminal production, while LLgen also takes the complexity in terms of 
+  non-terminals and terms into account. There is also a minor difference when
+  there is more than one shortest alternative and some of them are marked with
+  %avoid. Both differences are not very important as the user can specify
+  which alternative should be the default, thereby circumventing the
+  differences in the algorithms.
+- The default behaviour of generating one output C file per input and Lpars.c
+  and Lpars.h has been changed in favour of generating one .c file and one .h
+  file. The rationale given for creating multiple output files in the first
+  place was that it would reduce the compilation time for the generated 
+  parser. As computation power has become much more abundant this feature is
+  no longer necessary, and the difficult interaction with the make program
+  makes it undesirable. The LLgen behaviour is still supported through a 
+  command-line switch.
+- in LLgen one could have a parser and a %first macro with the same name.
+  LLnextgen forbids this, as it leads to name collisions in the new file
+  naming scheme. For the old LLgen file naming scheme it could also easily
+  lead to name collisions, although they could be circumvented by not mentioning
+  the parser in any of the C code in the .g files.
+- LLgen names the labels it generates L_X, where X is a number. LLnextgen names
+  these LL_X.
+- LLgen parsers are always reentrant. As this feature is hardly ever used,
+  LLnextgen parsers are non-reentrant unless the option --reentrant is used.
+
+Extra features
+==============
+
+LLnextgen incorporates a number of features that where not available in the
+LLgen program:
+
+- Tracing of conflicts. LLgen can only indicate where a conflict is detected,
+  but not where it is caused. As the cause may be in a seemingly unrelated
+  rule, conflicts can be very hard to find. LLnextgen can trace the cause of
+  conflicts, making it much easier to resolve them.
+- Automatic token buffering. LLgen and LLnextgen require that the token last
+  retrieved from the lexical analyser is returned again after a parse error
+  was detected. Most lexical analysers do not provide this feature, and LLgen
+  users are required to do this themselves. As this almost always leads to the
+  same code, LLnextgen can provide this code itself, or can be asked to print 
+  the default code to standard output as a basis for modifications.
+- A symbol table can be auto-generated if the needed information is supplied.
+- A default LLmessage routine can be generated (if the auto-generated symbol
+  table is used), or alternatively sent to the standard output.
+- The limitation of the maximum file-name length in LLgen has been removed.
+- A command-line switch is provided that makes LLnextgen as compatible with 
+  LLgen as possible, as well as a number of switches that can turn on separate
+  compatibility aspects.
+- Separating parameters in non-terminal headers can now be done with comma's. 
+  LLnextgen will issue a warning about using a semi-colon to separate
+  parameters. This warning can be suppressed with a command-line switch.
+- File inclusion is possible through the %include directive. Dependency
+  information can be generated for use in Makefile's.
+- Command line options can be set in the grammar itself through %options.
+- The parser can be stopped through the LLabort() call, if it has been enabled.
+- Thread-safe parsers.
+- Return values for non-terminals.
+- An extra repetition operator for specify that the last element in a
+  repeating term is optional for the last repetition of that term.
+
+Several other features are planned. See the file TODO for details.
+
+Prerequisites and installation
+==============================
+
+LLnextgen is written in pure ANSI C, so most C compilers should have little
+trouble compiling it. From version 0.3.0, LLnextgen has optional support for
+regular expression matching. As this is not part of the ANSI C specification,
+a mechanism has been introduced to allow automatic testing for POSIX regular
+expression availablity. Therefore, there are three different ways to compile
+LLnextgen:
+
+Using the configure script:
+---
+
+$ ./configure
+or
+$ ./configure --prefix=/usr
+(see ./configure --help for more tuning options)
+$ make all
+$ make install
+(assumes working install program)
+
+Manually editing the Makefile to suit your installation:
+---
+
+$ cp Makefile.in Makefile
+Edit the values for REGEX, REGEXLIBS and prefix
+$ make all
+$ make install
+(assumes working install program)
+
+Manually compiling LLnextgen:
+---
+
+$ cd src
+$ cp lexer.c.dist lexer.c
+$ cp grammar.c.dist grammar.c
+$ cp grammar.h.dist grammar.h
+$ cc -o LLnextgen *.c
+or to compile with regular expression support, add 
+-DREGEX={POSIX,OLDPOSIX,PCRE} and if required -l{regex,pcreposix} to your
+compiler command line (see Makefile.in for details on the values). After this
+your LLnextgen executable is done, and all that is left to do is to install
+it, and the documentation, into the target directories.
+
+Remarks:
+---
+
+LLnextgen is known to compile and work on several flavours of Un*x, on both
+32 and 64 bit platforms and on Windows. For compilation on Windows with MS
+Visual C++, the Makefile.win32 file is provided for use with nmake.exe.
+
+Reporting bugs
+==============
+
+If you think you have found a bug, please check that you are using the latest 
+version of LLnextgen [http://os.ghalkes.nl/LLnextgen]. When reporting bugs,
+please include a minimal grammar that demonstrates the problem.
+
+Author
+======
+
+Gertjan Halkes <llnextgen@ghalkes.nl>
