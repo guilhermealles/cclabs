@@ -13,6 +13,12 @@ typedef struct ScannerOptions{
     char *default_action_routine;
 }ScannerOptions;
 
+typedef struct ScannerDefinitions {
+    char *definition_name;
+    intSet definition_expansion;
+    struct ScannerDefinitions *next;
+} ScannerDefinitions;
+
 void initializeScannerOptions();
 void setLexerRoutine(char *routine_name);
 void setLexemeName(char *lexeme_name);
