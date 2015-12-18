@@ -27,8 +27,8 @@ Input                   : SpecificationFile
 
 SpecificationFile       :
                             [BEGIN_SECTION_OPTIONS OptionsSection END_SECTION_OPTIONS SEMICOLON]?
-                            [BEGIN_SECTION_DEFINES DefinesSection END_SECTION_DEFINES SEMICOLON]?
-                            [BEGIN_SECTION_REGEXPS RegExpsSection END_SECTION_REGEXPS SEMICOLON {printOptions(); exit(EXIT_SUCCESS);}]
+                            [BEGIN_SECTION_DEFINES {initializeDefinitionsSection();} DefinesSection END_SECTION_DEFINES SEMICOLON]?
+                            [BEGIN_SECTION_REGEXPS {initializeRegexTrees();} RegExpsSection END_SECTION_REGEXPS SEMICOLON {printOptions(); printDefinitions(); exit(EXIT_SUCCESS);}]
                         ;
 
 OptionsSection          :
@@ -41,33 +41,47 @@ OptionsSection          :
                             [DEFAULT_ACTION_OPTION IDENTIFIER {setDefaultActionRoutineName(yytext);} SEMICOLON]?
                         ;
 
-DefinesSection          :
-                            [DEFINE IDENTIFIER EQUALS OPEN_BRACES
-                                [LITERAL_INT|LITERAL_CHAR|RANGE_INT|RANGE_CHAR][COMMA[LITERAL_INT|LITERAL_CHAR|RANGE_INT|RANGE_CHAR]]*
-                            CLOSE_BRACES SEMICOLON]*
-                        ;
+DefinesSection
+{ char *identifier; }        :
+                                [DEFINE IDENTIFIER { identifier = malloc(sizeof(char) * strlen(yytext)+1); strcpy(identifier, yytext); printf("Debug> Identifier contains %s.\n", identifier);} EQUALS OPEN_BRACES
+                                    [LITERAL_INT {addLiteralToDefinition(identifier, yytext);}
+                                    |LITERAL_CHAR {addLiteralToDefinition(identifier, yytext);}
+                                    |RANGE_INT {addRangeToDefinition(identifier, yytext);}
+                                    |RANGE_CHAR {addRangeToDefinition(identifier, yytext);}]
+                                    [COMMA[LITERAL_INT {addLiteralToDefinition(identifier, yytext);}
+                                    |LITERAL_CHAR {addLiteralToDefinition(identifier, yytext);}
+                                    |RANGE_INT {addRangeToDefinition(identifier, yytext);}
+                                    |RANGE_CHAR {addRangeToDefinition(identifier, yytext);}]]*
+                                CLOSE_BRACES SEMICOLON]* {free(identifier);}
+                            ;
 
 RegExpsSection          :
-                            [REGEXP_DEF [RegularExpressionSet | REGEXP_EOF | REGEXP_ANYCHAR] SEMICOLON
+                            [REGEXP_DEF [RegularExpressionSet | REGEXP_EOF | REGEXP_ANYCHAR] SEMICOLON { puts("Successfully added one regex!"); }
                              [[TOKEN_DEF IDENTIFIER SEMICOLON] | [NO_TOKEN_DEF SEMICOLON]]
                              [[ACTION_DEF IDENTIFIER SEMICOLON] | [NO_ACTION_DEF SEMICOLON]]?]+
                         ;
 
-RegularExpressionSet    :
-                            [RegularExpression] | [OPEN_CURLYBRACES RegularExpression [SEMICOLON RegularExpression]* CLOSE_CURLYBRACES]
+RegularExpressionSet
+{ RegexTree *r; RegexTree *tree_ptr; }   :
+                                            { r = makeNewRegexTree(); tree_ptr = r; } [RegularExpression(tree_ptr)] { addTreeToArray(r); }
+                                        |   [OPEN_CURLYBRACES { r = makeNewRegexTree(); tree_ptr = r; } RegularExpression(tree_ptr) { addTreeToArray(r); }
+                                            [SEMICOLON { r = makeNewRegexTree(); tree_ptr = r; } RegularExpression(tree_ptr) { addTreeToArray(r); } ]* CLOSE_CURLYBRACES]
+                                        ;
+
+RegularExpression(RegexTree *node)
+{ RegexTree *child; }   :
+                            { child = regexTreeAddTerm(node); } Term(child) [ {/* Add binary */} BINARYOP { child = regexTreeAddTerm(node); } Term(child)]*
                         ;
 
-RegularExpression       :
-                            Term [BINARYOP Term]*
+Term(RegexTree *node)
+{ RegexTree *child; }   :
+                            { child = regexTreeAddFactor(node); } Factor(child) [UNARYOP {/* Add unary */}]?
                         ;
 
-Term                    :
-                            Factor [UNARYOP]?
-                        ;
-
-Factor                  :
-                            [OPERAND | LITERAL_CHAR | LITERAL_INT | IDENTIFIER | EPSILON]
-                        |   OPEN_PARENTHESIS RegularExpression CLOSE_PARENTHESIS
+Factor(RegexTree *node)
+{ RegexTree *child; }   :
+                            {/* Add the finals */}[OPERAND | LITERAL_CHAR | LITERAL_INT | IDENTIFIER | EPSILON]
+                        |   OPEN_PARENTHESIS { child = regexTreeAddRegex(node);} RegularExpression(child) CLOSE_PARENTHESIS
                         ;
 
 
