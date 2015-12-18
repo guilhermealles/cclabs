@@ -335,8 +335,11 @@ nfa mergeNFAs(nfa *nfaArray, unsigned int nfaCount) {
 }
 
 // Merge 2 NFAs and add a common and unique final state.
-nfa unionNFAs(nfa* nfa_array){
+nfa uniteNFAs(nfa nfa1, nfa nfa2){
     int i;
+    nfa *nfa_array = malloc(sizeof(nfa) * 2);
+    nfa_array[0] = nfa1;
+    nfa_array[1] = nfa2;
     nfa merged_nfa = mergeNFAs(nfa_array, 2);
     int new_final_state = merged_nfa.nstates;
 
@@ -363,7 +366,7 @@ nfa unionNFAs(nfa* nfa_array){
 
 
 // Concatenate NFAs nfa1 and nfa2. The start state will be the start state of nfa1 and the final state will be the final state of nfa2. The final state of nfa1 and the start state of nfa2 will be merged into one intermediate state.
-nfa concatenationNFAs(nfa nfa1, nfa nfa2){
+nfa concatenateNFAs(nfa nfa1, nfa nfa2){
     unsigned int states_count = nfa1.nstates + nfa2.nstates - 1;
     nfa concatenated_nfa = makeNFA(states_count);
 
@@ -502,5 +505,28 @@ nfa positiveClosureNFA(nfa nfa){
     new_nfa.final = copyIntSet(final_states);
 
     return new_nfa;
+}
 
+// Given a regexp LITERAL_CHAR, LITERAL_INT or an ASCII value, creates its correspondent NFA.
+nfa regexpToNFA(char* regexp){
+    nfa nfa = makeNFA(2);
+    nfa.start = 0;
+
+    // Add a transition with the given symbol from the start state to the final state 1.
+    if(regexp[0] == '\''){
+        insertIntSet(1, &nfa.transition[0][(int)regexp[1]]);
+    }
+    else if(regexp[0] == '#'){
+        char* symb = strtok(regexp, "#");
+        int symbol = atoi(symb);
+        insertIntSet(1, &nfa.transition[0][symbol]);
+    }else { // identifier
+        // Pra cada item no intset, adicionar uma transição de 0 para 1.
+    }
+
+    intSet final_state = makeEmptyIntSet();
+    insertIntSet(1, &final_state);
+    nfa.final = copyIntSet(final_state);
+
+    return nfa;
 }

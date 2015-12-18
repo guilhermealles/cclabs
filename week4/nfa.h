@@ -29,10 +29,11 @@ intSet addToAllIntSetItems(unsigned int value, intSet set);
 void copyTransitions(nfa sourceNfa, unsigned int sourceState, nfa *destNfa, unsigned int completedNfaStates);
 void processDfaString(char *string, dfa d);
 nfa mergeNFAs(nfa *nfaArray, unsigned int nfaCount);
-nfa unionNFAs(nfa* nfa_array);
-nfa concatenationNFAs(nfa nfa1, nfa nfa2);
+nfa uniteNFAs(nfa nfa1, nfa nfa2);
+nfa concatenateNFAs(nfa nfa1, nfa nfa2);
 nfa kleeneClosureNFA(nfa nfa);
 nfa optionalOperationNFA(nfa nfa);
 nfa positiveClosureNFA(nfa nfa);
+nfa regexpToNFA(char* regexp);
 
 #endif
