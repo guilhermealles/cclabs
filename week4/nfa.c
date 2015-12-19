@@ -4,6 +4,7 @@
 #include <string.h>
 #include "nfa.h"
 #include "intset.h"
+#include "scanner_specification.h"
 
 int mapping_size;
 intSet *mapping;
@@ -520,10 +521,23 @@ nfa regexpToNFA(char* regexp){
         char* symb = strtok(regexp, "#");
         int symbol = atoi(symb);
         insertIntSet(1, &nfa.transition[0][symbol]);
-    }else { // identifier
-        // Pra cada item no intset, adicionar uma transição de 0 para 1.
-    }
+    }else {
+        ScannerDefinition *definition;
+        definition = searchDefinition(regexp);
 
+        if (definition != NULL){
+            intSet expansion_copy = copyIntSet(definition->definition_expansion);
+            // Add a transition for each symbol that the definition represents.
+            while (! isEmptyIntSet(expansion_copy)) {
+                int symbol = chooseFromIntSet(expansion_copy);
+                deleteIntSet(symbol, &expansion_copy);
+                insertIntSet(1, &nfa.transition[0][symbol]);
+            }
+        }
+        else{
+            fprintf(stderr, "Error on regexpToNFA: definition not found.\n");
+        }
+    }
     intSet final_state = makeEmptyIntSet();
     insertIntSet(1, &final_state);
     nfa.final = copyIntSet(final_state);
