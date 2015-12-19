@@ -697,7 +697,7 @@ LL6_RegularExpression
 #line 698 "parser.c"
 ;
 #line 66 "parser.g"
-{ addTreeToArray(r); }
+{ evaluateRegexTree(r); addTreeToArray(r); saveNFA("out.nfa", r->regex_nfa);}
 #line 702 "parser.c"
 break;
 case 29:/* OPEN_CURLYBRACES */

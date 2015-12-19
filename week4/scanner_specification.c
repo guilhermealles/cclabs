@@ -1,8 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "scanner_specification.h"
 #include "nfa.h"
+#include "scanner_specification.h"
 
 static ScannerOptions options_section;
 
@@ -321,6 +321,69 @@ RegexTree* regexTreeAddUnary (RegexTree *node_to_add, int unary_op){
     node_to_add->children_count++;
 
     return &node_to_add->children[new_children_index];
+}
+
+void evaluateRegexTree(RegexTree *root) {
+    evaluateRegexTreeRec(root);
+}
+
+nfa evaluateRegexTreeRec(RegexTree *tree) {
+    nfa final_nfa;
+    switch(tree->node_type) {
+        case TYPE_REGEX:
+            final_nfa = evaluateRegexTreeRec(&tree->children[0]);
+            int children_index = 0;
+            while (children_index < (tree->children_count-1)) {
+                // Switch the binary operation
+                switch(tree->children[children_index+1].node_type) {
+                    case BINARYOP_UNION:
+                        final_nfa = uniteNFAs(final_nfa, evaluateRegexTreeRec(&tree->children[children_index+2]));
+                        break;
+                    case BINARYOP_CONCATENATION:
+                        final_nfa = concatenateNFAs(final_nfa, evaluateRegexTreeRec(&tree->children[children_index+2]));
+                        break;
+                    default:
+                        fprintf(stderr, "Error in evaluateRegexTreeRec.\n");
+                        exit(EXIT_FAILURE);
+                }
+                children_index += 2;
+            }
+
+            tree->regex_nfa = final_nfa;
+            break;
+        case TYPE_TERM:
+            if (tree->children_count > 1) {
+                switch(tree->children[1].node_type) {
+                    case UNARYOP_OPTIONAL:
+                        tree->regex_nfa = optionalOperationNFA(evaluateRegexTreeRec(&tree->children[0]));
+                        break;
+                    case UNARYOP_KLEENECLOSURE:
+                        tree->regex_nfa = kleeneClosureNFA(evaluateRegexTreeRec(&tree->children[0]));
+                        break;
+                    case UNARYOP_POSITIVECLOSURE:
+                        tree->regex_nfa = positiveClosureNFA(evaluateRegexTreeRec(&tree->children[0]));
+                        break;
+                    default:
+                        fprintf(stderr, "Error in evaluateRegexTreeRec.\n");
+                        exit(EXIT_FAILURE);
+                }
+            }
+            else {
+                tree->regex_nfa = evaluateRegexTreeRec(&tree->children[0]);
+            }
+            break;
+        case TYPE_FACTOR:
+            tree->regex_nfa = evaluateRegexTreeRec(&tree->children[0]);
+            break;
+        case TYPE_VALUE:
+            // Do nothing, just return the NFA.
+            break;
+        default:
+            fprintf(stderr, "Error in evaluateRegexTreeRec.\n");
+            exit(EXIT_FAILURE);
+    }
+
+    return tree->regex_nfa;
 }
 
 // Add a tree to the array, returns the index of the new tree.

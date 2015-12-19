@@ -1,9 +1,9 @@
 all: scannergenerator
 
-scannergenerator: parser lexer scanner_specification.o intset.o nfa.o
+scannergenerator: parser lexer intset.o nfa.o scanner_specification.o
 	gcc -o scannergenerator parser.o lexer.o scanner_specification.o intset.o nfa.o -ll -lm
 
-scanner_specification.o: scanner_specification.c scanner_specification.h
+scanner_specification.o: scanner_specification.c scanner_specification.h intset.o nfa.o
 	gcc -c scanner_specification.c
 
 intset.o: intset.c intset.h
