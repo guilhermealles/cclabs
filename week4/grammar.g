@@ -15,7 +15,7 @@ extern int line;
         POSITIONING_OPTION_ON, POSITIONING_OPTION_OFF, WHERE_CLAUSE, POSITIONING_LINE,
         POSITIONING_COLUMN, DEFAULT_ACTION_OPTION, DEFINE, EQUALS,
         TOKEN_DEF, NO_TOKEN_DEF, ACTION_DEF, NO_ACTION_DEF, REGEXP_EOF, REGEXP_ANYCHAR,
-        REGEXP_DEF, EPSILON, OPEN_PARENTHESIS, CLOSE_PARENTHESIS, OPEN_CURLYBRACES,
+        REGEXP_DEF, TOKEN_EPSILON, OPEN_PARENTHESIS, CLOSE_PARENTHESIS, OPEN_CURLYBRACES,
         CLOSE_CURLYBRACES, OPEN_BRACES, CLOSE_BRACES, IDENTIFIER, LITERAL_INT, LITERAL_CHAR,
         RANGE_INT, RANGE_CHAR, OPERAND, BINARYOP, UNARYOP;
 %options "generate-lexer-wrapper";
@@ -43,7 +43,7 @@ OptionsSection          :
 
 DefinesSection
 { char *identifier; }        :
-                                [DEFINE IDENTIFIER { identifier = malloc(sizeof(char) * strlen(yytext)+1); strcpy(identifier, yytext); printf("Debug> Identifier contains %s.\n", identifier);} EQUALS OPEN_BRACES
+                                [DEFINE IDENTIFIER { identifier = malloc(sizeof(char) * strlen(yytext)+1); strcpy(identifier, yytext); } EQUALS OPEN_BRACES
                                     [LITERAL_INT {addLiteralToDefinition(identifier, yytext);}
                                     |LITERAL_CHAR {addLiteralToDefinition(identifier, yytext);}
                                     |RANGE_INT {addRangeToDefinition(identifier, yytext);}
@@ -80,7 +80,7 @@ Term(RegexTree *node)
 
 Factor(RegexTree *node)
 { RegexTree *child; }   :
-                            {/* Add the finals */}[OPERAND | LITERAL_CHAR | LITERAL_INT | IDENTIFIER | EPSILON]
+                            [OPERAND | LITERAL_CHAR | LITERAL_INT | IDENTIFIER | TOKEN_EPSILON] { regexTreeAddValue(node, yytext); }
                         |   OPEN_PARENTHESIS { child = regexTreeAddRegex(node);} RegularExpression(child) CLOSE_PARENTHESIS
                         ;
 

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "intset.h"
+#include "nfa.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -18,11 +19,6 @@
 #define UNARYOP_POSITIVECLOSURE 8
 
 #define TYPE_VALUE 9
-
-/*
- *  temporary!!!
- */
- typedef int nfa;
 
 typedef struct ScannerOptions{
     char *lexer_routine;
@@ -42,7 +38,7 @@ typedef struct ScannerDefinition {
 typedef struct RegexTree {
     struct RegexTree *parent;
     unsigned int node_type;
-    nfa *regex_nfa;
+    nfa regex_nfa;
     unsigned int children_count;
     struct RegexTree *children;
 } RegexTree;
@@ -65,10 +61,11 @@ void printDefinitions();
 
 void initializeRegexTrees();
 RegexTree* makeNewRegexTree();
-void makeRegexTreeNode(RegexTree *dest, int node_type, nfa *regex_nfa);
+void makeRegexTreeNode(RegexTree *dest, int node_type);
+void makeRegexTreeValueNode(RegexTree *dest, nfa regex_nfa);
 RegexTree *regexTreeAddTerm (RegexTree *node_to_add);
 RegexTree *regexTreeAddFactor (RegexTree *node_to_add);
-RegexTree *regexTreeAddValue (RegexTree *node_to_add);
+RegexTree *regexTreeAddValue (RegexTree *node_to_add, char *regex_value);
 RegexTree *regexTreeAddRegex (RegexTree *node_to_add);
 unsigned int addTreeToArray (RegexTree *tree_to_add);
 

@@ -1,7 +1,8 @@
-#include "scanner_specification.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "scanner_specification.h"
+#include "nfa.h"
 
 static ScannerOptions options_section;
 
@@ -182,22 +183,27 @@ RegexTree* makeNewRegexTree() {
     RegexTree *tree = malloc(sizeof(RegexTree));
     tree->parent = NULL;
     tree->node_type = TYPE_REGEX;
-    tree->regex_nfa = NULL;
     tree->children_count = 0;
     tree->children = NULL;
 
     return tree;
 }
 
-void makeRegexTreeNode(RegexTree *dest, int node_type, nfa *regex_nfa) {
+void makeRegexTreeNode(RegexTree *dest, int node_type) {
+    if (node_type == TYPE_VALUE) {
+        fprintf(stderr, "Error: trying to add a value node with makeRegexTreeNode().\n");
+        exit(EXIT_FAILURE);
+    }
     dest->parent = NULL;
     dest->node_type = node_type;
-    if (dest->node_type == TYPE_VALUE) {
-        // Add regex nfa
-    }
-    else {
-        dest->regex_nfa = NULL;
-    }
+    dest->children_count = 0;
+    dest->children = NULL;
+}
+
+void makeRegexTreeValueNode(RegexTree *dest, nfa regex_nfa) {
+    dest->parent = NULL;
+    dest->node_type = TYPE_VALUE;
+    dest->regex_nfa = regex_nfa;
     dest->children_count = 0;
     dest->children = NULL;
 }
@@ -211,7 +217,7 @@ RegexTree *regexTreeAddTerm (RegexTree *node_to_add) {
 
     unsigned int new_children_index = node_to_add->children_count;
     node_to_add->children = realloc(node_to_add->children, sizeof(RegexTree) * (node_to_add->children_count+1));
-    makeRegexTreeNode(&node_to_add->children[new_children_index], TYPE_TERM, NULL);
+    makeRegexTreeNode(&node_to_add->children[new_children_index], TYPE_TERM);
     node_to_add->children[new_children_index].parent = node_to_add;
     node_to_add->children_count++;
 
@@ -227,7 +233,7 @@ RegexTree *regexTreeAddFactor (RegexTree *node_to_add) {
 
     unsigned int new_children_index = node_to_add->children_count;
     node_to_add->children = realloc(node_to_add->children, sizeof(RegexTree) * (node_to_add->children_count+1));
-    makeRegexTreeNode(&node_to_add->children[new_children_index], TYPE_FACTOR, NULL);
+    makeRegexTreeNode(&node_to_add->children[new_children_index], TYPE_FACTOR);
     node_to_add->children[new_children_index].parent = node_to_add;
     node_to_add->children_count++;
 
@@ -235,7 +241,7 @@ RegexTree *regexTreeAddFactor (RegexTree *node_to_add) {
 }
 
 // Return a pointer to the new child node
-RegexTree *regexTreeAddValue (RegexTree *node_to_add) {
+RegexTree *regexTreeAddValue (RegexTree *node_to_add, char *regex_value) {
     if (node_to_add->node_type != TYPE_FACTOR) {
         fprintf(stderr, "Error: trying do add a value to a non-factor node. Node type: %d\n", node_to_add->node_type);
         exit(EXIT_FAILURE);
@@ -243,7 +249,8 @@ RegexTree *regexTreeAddValue (RegexTree *node_to_add) {
 
     unsigned int new_children_index = node_to_add->children_count;
     node_to_add->children = realloc(node_to_add->children, sizeof(RegexTree) * (node_to_add->children_count+1));
-    makeRegexTreeNode(&node_to_add->children[new_children_index], TYPE_VALUE, NULL/* to-do */);
+    nfa regex_nfa = regexpToNFA(regex_value);
+    makeRegexTreeValueNode(&node_to_add->children[new_children_index], regex_nfa);
     node_to_add->children[new_children_index].parent = node_to_add;
     node_to_add->children_count++;
 
@@ -259,7 +266,7 @@ RegexTree *regexTreeAddRegex (RegexTree *node_to_add) {
 
     unsigned int new_children_index = node_to_add->children_count;
     node_to_add->children = realloc(node_to_add->children, sizeof(RegexTree) * (node_to_add->children_count+1));
-    makeRegexTreeNode(&node_to_add->children[new_children_index], TYPE_REGEX, NULL);
+    makeRegexTreeNode(&node_to_add->children[new_children_index], TYPE_REGEX);
     node_to_add->children[new_children_index].parent = node_to_add;
     node_to_add->children_count++;
 

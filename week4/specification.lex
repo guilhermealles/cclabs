@@ -52,7 +52,7 @@ unaryop         [?*+]
 "eof"               { return (REGEXP_EOF);               }
 "anychar"           { return (REGEXP_ANYCHAR);           }
 "regexp"            { return (REGEXP_DEF);              }
-"epsilon"           { return (EPSILON);                 }
+"epsilon"           { return (TOKEN_EPSILON);                 }
 "("                 { return (OPEN_PARENTHESIS);        }
 ")"                 { return (CLOSE_PARENTHESIS);       }
 "{"                 { return (OPEN_CURLYBRACES);        }

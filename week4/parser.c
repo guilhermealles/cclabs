@@ -418,7 +418,7 @@ LLread();
 LLtcnt[33]--;
 LL_SCANDONE(289);/* IDENTIFIER */
 #line 46 "parser.g"
-{ identifier = malloc(sizeof(char) * strlen(yytext)+1); strcpy(identifier, yytext); printf("Debug> Identifier contains %s.\n", identifier);}
+{ identifier = malloc(sizeof(char) * strlen(yytext)+1); strcpy(identifier, yytext); }
 #line 423 "parser.c"
 LLread();
 LLtcnt[18]--;
@@ -563,7 +563,7 @@ default:
 if (LLskip())
 goto LL_2;
 /*FALLTHROUGH*/
-case 26:/* EPSILON */
+case 26:/* TOKEN_EPSILON */
 case 27:/* OPEN_PARENTHESIS */
 case 29:/* OPEN_CURLYBRACES */
 case 33:/* IDENTIFIER */
@@ -679,7 +679,7 @@ default:
 if (LLskip())
 goto LL_0;
 /*FALLTHROUGH*/
-case 26:/* EPSILON */
+case 26:/* TOKEN_EPSILON */
 case 27:/* OPEN_PARENTHESIS */
 case 33:/* IDENTIFIER */
 case 34:/* LITERAL_INT */
@@ -859,16 +859,13 @@ default:
 if (LLskip())
 goto LL_0;
 /*FALLTHROUGH*/
-case 26:/* EPSILON */
+case 26:/* TOKEN_EPSILON */
 case 33:/* IDENTIFIER */
 case 34:/* LITERAL_INT */
 case 35:/* LITERAL_CHAR */
 case 38:/* OPERAND */
 LLscnt[18]--;
 LLscnt[19]++;
-#line 83 "parser.g"
-{/* Add the finals */}
-#line 872 "parser.c"
 LL_1:
 switch (LLcsymb) {
 default:
@@ -891,11 +888,14 @@ case 33:/* IDENTIFIER */
 LLscnt[19]--;
 LL_SCANDONE(289);/* IDENTIFIER */
 break;
-case 26:/* EPSILON */
+case 26:/* TOKEN_EPSILON */
 LLscnt[19]--;
-LL_SCANDONE(282);/* EPSILON */
+LL_SCANDONE(282);/* TOKEN_EPSILON */
 break;
 }
+#line 83 "parser.g"
+{ regexTreeAddValue(node, yytext); }
+#line 899 "parser.c"
 break;
 case 27:/* OPEN_PARENTHESIS */
 LLscnt[18]--;

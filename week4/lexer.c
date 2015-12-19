@@ -967,7 +967,7 @@ YY_RULE_SETUP
 case 25:
 YY_RULE_SETUP
 #line 55 "specification.lex"
-{ return (EPSILON);                 }
+{ return (TOKEN_EPSILON);                 }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
