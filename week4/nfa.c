@@ -497,8 +497,6 @@ nfa optionalOperationNFA(nfa nfa){
     return new_nfa;
 }
 
-
-// ************************************* ERRADO!!! MUDAR KLEENE
 nfa positiveClosureNFA(nfa nfa){
     // Add an initial and a final state.
     struct nfa new_nfa = makeNFA(nfa.nstates + 2);
