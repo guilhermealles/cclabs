@@ -273,6 +273,40 @@ RegexTree *regexTreeAddRegex (RegexTree *node_to_add) {
     return &node_to_add->children[new_children_index];
 }
 
+/* Deu bosta aqui. Tem que fazer o parse do lexeme e converter pro binary op.
+
+RegexTree* regexTreeAddBinary (RegexTree *node_to_add, int binary_op) {
+    if (node_to_add->node_type != TYPE_REGEX) {
+        fprintf(stderr, "Error: trying to add a binary operation to a non-regex node.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    unsigned int new_children_index = node_to_add->children_count;
+    node_to_add->children = realloc(node_to_add->children, sizeof(RegexTree) * (node_to_add->children_count+1));
+    makeRegexTreeNode(&node_to_add->children[new_children_index], binary_op);
+    node_to_add->children[new_children_index].parent = node_to_add;
+    node_to_add->children_count++;
+
+    return &node_to_add->children[new_children_index];
+}
+
+RegexTree* regexTreeAddUnary (RegexTree *node_to_add, int unary_op){
+    if (node_to_add->node_type != TYPE_TERM) {
+        fprintf(stderr, "Error: trying to add a binary operation to a non-term node.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    unsigned int new_children_index = node_to_add->children_count;
+    node_to_add->children = realloc(node_to_add->children, sizeof(RegexTree) * (node_to_add->children_count+1));
+    makeRegexTreeNode(&node_to_add->children[new_children_index], unary_op);
+    node_to_add->children[new_children_index].parent = node_to_add;
+    node_to_add->children_count++;
+
+    return &node_to_add->children[new_children_index];
+}
+
+*/
+
 // Add a tree to the array, returns the index of the new tree.
 unsigned int addTreeToArray (RegexTree *tree_to_add) {
     unsigned int new_tree_index = regex_trees_count;

@@ -67,6 +67,8 @@ RegexTree *regexTreeAddTerm (RegexTree *node_to_add);
 RegexTree *regexTreeAddFactor (RegexTree *node_to_add);
 RegexTree *regexTreeAddValue (RegexTree *node_to_add, char *regex_value);
 RegexTree *regexTreeAddRegex (RegexTree *node_to_add);
+RegexTree* regexTreeAddBinary (RegexTree *node_to_add, int binary_op);
+RegexTree* regexTreeAddUnary (RegexTree *node_to_add, int unary_op);
 unsigned int addTreeToArray (RegexTree *tree_to_add);
 
 
