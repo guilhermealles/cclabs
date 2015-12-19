@@ -521,6 +521,14 @@ nfa regexpToNFA(char* regexp){
         char* symb = strtok(regexp, "#");
         int symbol = atoi(symb);
         insertIntSet(1, &nfa.transition[0][symbol]);
+    }else if(strcmp(regexp, "eof") == 0){
+        // EOF ASCII symbol is 0
+        insertIntSet(1, &nfa.transition[0][0]);
+    }else if(strcmp(regexp, "anychar") == 0){
+        int i;
+        for (i = 0; i <= 127; i++){
+            insertIntSet(1, &nfa.transition[0][i]);
+        }
     }else {
         ScannerDefinition *definition;
         definition = searchDefinition(regexp);
