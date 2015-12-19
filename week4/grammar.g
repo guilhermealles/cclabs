@@ -63,7 +63,7 @@ RegExpsSection          :
 
 RegularExpressionSet
 { RegexTree *r; RegexTree *tree_ptr; }   :
-                                            { r = makeNewRegexTree(); tree_ptr = r; } [RegularExpression(tree_ptr)] { addTreeToArray(r); }
+                                            { r = makeNewRegexTree(); tree_ptr = r; } [RegularExpression(tree_ptr)] { evaluateRegexTree(r); addTreeToArray(r); saveNFA("out.nfa", r->regex_nfa);}
                                         |   [OPEN_CURLYBRACES { r = makeNewRegexTree(); tree_ptr = r; } RegularExpression(tree_ptr) { addTreeToArray(r); }
                                             [SEMICOLON { r = makeNewRegexTree(); tree_ptr = r; } RegularExpression(tree_ptr) { addTreeToArray(r); } ]* CLOSE_CURLYBRACES]
                                         ;

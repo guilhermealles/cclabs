@@ -70,8 +70,8 @@ RegexTree *regexTreeAddValue (RegexTree *node_to_add, char *regex_value);
 RegexTree *regexTreeAddRegex (RegexTree *node_to_add);
 RegexTree* regexTreeAddBinary (RegexTree *node_to_add, int binary_op);
 RegexTree* regexTreeAddUnary (RegexTree *node_to_add, int unary_op);
+void evaluateRegexTree(RegexTree *root);
+nfa evaluateRegexTreeRec(RegexTree *tree);
 unsigned int addTreeToArray (RegexTree *tree_to_add);
-
-
 
 #endif
