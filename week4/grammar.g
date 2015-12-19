@@ -69,14 +69,15 @@ RegularExpressionSet
                                         ;
 
 RegularExpression(RegexTree *node)
-{ RegexTree *child; }   :
-                            { child = regexTreeAddTerm(node); } Term(child) [ {/* Add binary */} BINARYOP { child = regexTreeAddTerm(node); } Term(child)]*
-                        ;
+{ RegexTree *child; int operation_type; }   :
+                                                { child = regexTreeAddTerm(node); } Term(child)
+                                                [BINARYOP { operation_type = parseOperationsToType(yytext); regexTreeAddBinary(node, operation_type); } { child = regexTreeAddTerm(node); } Term(child)]*
+                                            ;
 
 Term(RegexTree *node)
-{ RegexTree *child; }   :
-                            { child = regexTreeAddFactor(node); } Factor(child) [UNARYOP {/* Add unary */}]?
-                        ;
+{ RegexTree *child; int operation_type; }   :
+                                                { child = regexTreeAddFactor(node); } Factor(child) [UNARYOP { operation_type = parseOperationsToType(yytext); regexTreeAddUnary(node, operation_type); }]?
+                                            ;
 
 Factor(RegexTree *node)
 { RegexTree *child; }   :

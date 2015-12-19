@@ -138,12 +138,12 @@ static void LL6_RegularExpression
 #line 139 "parser.c"
 ;
 static void LL7_Term
-#line 76 "parser.g"
+#line 77 "parser.g"
 (RegexTree *node)
 #line 144 "parser.c"
 ;
 static void LL8_Factor
-#line 81 "parser.g"
+#line 82 "parser.g"
 (RegexTree *node)
 #line 149 "parser.c"
 ;
@@ -762,7 +762,7 @@ static void LL6_RegularExpression
 #line 763 "parser.c"
 {
 #line 72 "parser.g"
- RegexTree *child; 
+ RegexTree *child; int operation_type; 
 #line 767 "parser.c"
 LLtcnt[39]++;
 #line 73 "parser.g"
@@ -785,17 +785,17 @@ case 30:/* CLOSE_CURLYBRACES */
 break;
 case 39:/* BINARYOP */
 LLscnt[17]++;
-#line 73 "parser.g"
-{/* Add binary */}
-#line 791 "parser.c"
 LL_SCANDONE(295);/* BINARYOP */
-#line 73 "parser.g"
+#line 74 "parser.g"
+{ operation_type = parseOperationsToType(yytext); regexTreeAddBinary(node, operation_type); }
+#line 792 "parser.c"
+#line 74 "parser.g"
 { child = regexTreeAddTerm(node); }
 #line 795 "parser.c"
 LLread();
 LLscnt[17]--;
 LL7_Term
-#line 73 "parser.g"
+#line 74 "parser.g"
 (child)
 #line 801 "parser.c"
 ;
@@ -806,20 +806,20 @@ break;
 }
 }
 static void LL7_Term
-#line 76 "parser.g"
+#line 77 "parser.g"
 (RegexTree *node)
 #line 812 "parser.c"
 {
-#line 77 "parser.g"
- RegexTree *child; 
+#line 78 "parser.g"
+ RegexTree *child; int operation_type; 
 #line 816 "parser.c"
 LLscnt[18]++;
 LLtcnt[40]++;
-#line 78 "parser.g"
+#line 79 "parser.g"
 { child = regexTreeAddFactor(node); }
 #line 821 "parser.c"
 LL8_Factor
-#line 78 "parser.g"
+#line 79 "parser.g"
 (child)
 #line 825 "parser.c"
 ;
@@ -839,18 +839,18 @@ break;
 case 40:/* UNARYOP */
 LLtcnt[40]--;
 LL_SCANDONE(296);/* UNARYOP */
-#line 78 "parser.g"
-{/* Add unary */}
+#line 79 "parser.g"
+{ operation_type = parseOperationsToType(yytext); regexTreeAddUnary(node, operation_type); }
 #line 845 "parser.c"
 LLread();
 }
 }
 static void LL8_Factor
-#line 81 "parser.g"
+#line 82 "parser.g"
 (RegexTree *node)
 #line 852 "parser.c"
 {
-#line 82 "parser.g"
+#line 83 "parser.g"
  RegexTree *child; 
 #line 856 "parser.c"
 LL_0:
@@ -893,7 +893,7 @@ LLscnt[19]--;
 LL_SCANDONE(282);/* TOKEN_EPSILON */
 break;
 }
-#line 83 "parser.g"
+#line 84 "parser.g"
 { regexTreeAddValue(node, yytext); }
 #line 899 "parser.c"
 break;
@@ -902,13 +902,13 @@ LLscnt[18]--;
 LLscnt[15]++;
 LLtcnt[28]++;
 LL_SCANDONE(283);/* OPEN_PARENTHESIS */
-#line 84 "parser.g"
+#line 85 "parser.g"
 { child = regexTreeAddRegex(node);}
 #line 908 "parser.c"
 LLread();
 LLscnt[15]--;
 LL6_RegularExpression
-#line 84 "parser.g"
+#line 85 "parser.g"
 (child)
 #line 914 "parser.c"
 ;
@@ -917,7 +917,7 @@ LL_SCANDONE(284);/* CLOSE_PARENTHESIS */
 break;
 }
 }
-#line 88 "parser.g"
+#line 89 "parser.g"
 
 /*****************************************************************/
 /* the following code is copied verbatim in the generated C file */

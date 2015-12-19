@@ -535,7 +535,8 @@ nfa regexpToNFA(char* regexp){
             }
         }
         else{
-            fprintf(stderr, "Error on regexpToNFA: definition not found.\n");
+            fprintf(stderr, "Error on regexpToNFA: definition \'%s\' not found.\n", regexp);
+            exit(EXIT_FAILURE);
         }
     }
     intSet final_state = makeEmptyIntSet();

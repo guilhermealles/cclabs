@@ -174,6 +174,26 @@ void printDefinitions() {
     }
 }
 
+int parseOperationsToType (char *lexeme) {
+    char op = lexeme[0];
+
+    switch(op) {
+        case '|':
+            return BINARYOP_UNION;
+        case '.':
+            return BINARYOP_CONCATENATION;
+        case '?':
+            return UNARYOP_OPTIONAL;
+        case '*':
+            return UNARYOP_KLEENECLOSURE;
+        case '+':
+            return UNARYOP_POSITIVECLOSURE;
+        default:
+            fprintf(stderr, "Error: unrecognised operator \'%s\'.\n", lexeme);
+            exit(EXIT_FAILURE);
+    }
+}
+
 void initializeRegexTrees() {
     regex_trees_count = 0;
     regex_trees = malloc(sizeof(RegexTree) * regex_trees_count);
@@ -273,8 +293,6 @@ RegexTree *regexTreeAddRegex (RegexTree *node_to_add) {
     return &node_to_add->children[new_children_index];
 }
 
-/* Deu bosta aqui. Tem que fazer o parse do lexeme e converter pro binary op.
-
 RegexTree* regexTreeAddBinary (RegexTree *node_to_add, int binary_op) {
     if (node_to_add->node_type != TYPE_REGEX) {
         fprintf(stderr, "Error: trying to add a binary operation to a non-regex node.\n");
@@ -304,8 +322,6 @@ RegexTree* regexTreeAddUnary (RegexTree *node_to_add, int unary_op){
 
     return &node_to_add->children[new_children_index];
 }
-
-*/
 
 // Add a tree to the array, returns the index of the new tree.
 unsigned int addTreeToArray (RegexTree *tree_to_add) {

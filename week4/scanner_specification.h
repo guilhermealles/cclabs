@@ -59,6 +59,7 @@ void addLiteralToDefinition(char *name, char *literal);
 void addRangeToDefinition(char *name, char *range);
 void printDefinitions();
 
+int parseOperationsToType (char *lexeme);
 void initializeRegexTrees();
 RegexTree* makeNewRegexTree();
 void makeRegexTreeNode(RegexTree *dest, int node_type);
