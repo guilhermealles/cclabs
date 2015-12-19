@@ -434,17 +434,23 @@ nfa kleeneClosureNFA(nfa nfa){
         }
         new_nfa_index++;
     }
-    int old_final_state = nfa.nstates;
     int old_start_state = new_nfa.start + 1;
 
-    // Add an epsilon transition from the old final state to the old start state.
-    insertIntSet(old_start_state, &new_nfa.transition[old_final_state][EPSILON]);
+    // Add an epsilon transition from each old final state to the old start state. And an epsilon transition to the new final state.
+    intSet old_final_states = addToAllIntSetItems(1, nfa.final);
+    while (! isEmptyIntSet(old_final_states)){
+        int state = chooseFromIntSet(old_final_states);
+        deleteIntSet(state, &old_final_states);
 
-    // Create an epsilon transition from the old final state to the new final state.
-    insertIntSet(new_nfa_index, &new_nfa.transition[old_final_state][EPSILON]);
-    intSet final_states = makeEmptyIntSet();
-    insertIntSet(new_nfa_index, &final_states);
-    new_nfa.final = copyIntSet(final_states);
+        insertIntSet(old_start_state, &new_nfa.transition[state][EPSILON]);
+        // Create an epsilon transition from each old final state to the new final state.
+        insertIntSet(new_nfa_index, &new_nfa.transition[state][EPSILON]);
+    }
+
+
+    intSet final_state = makeEmptyIntSet();
+    insertIntSet(new_nfa_index, &final_state);
+    new_nfa.final = copyIntSet(final_state);
 
     // Add an epsilon transition from the start state to the final state.
     insertIntSet(new_nfa_index, &new_nfa.transition[new_nfa.start][EPSILON]);
@@ -452,27 +458,47 @@ nfa kleeneClosureNFA(nfa nfa){
     return new_nfa;
 }
 
-// Create a new final state and add an epsilon transition from the start state to this new final state.
+// Create a new start state and a new final state. Add an epsilon transition from the start state to this new final state,
+// and an epsilon transition from each old final state to the new final state.
 nfa optionalOperationNFA(nfa nfa){
-    struct nfa new_nfa = makeNFA(nfa.nstates + 1);
-    new_nfa.start = nfa.start;
-    new_nfa.final = copyIntSet(nfa.final);
+    struct nfa new_nfa = makeNFA(nfa.nstates + 2);
+    new_nfa.start = 0;
+    int new_final_state = nfa.nstates + 1;
 
-    // Copy nfa to the new nfa.
-    int i;
-    for (i = 0; i < nfa.nstates; i++) {
-        copyTransitions(nfa, i, &new_nfa, 0);
+    int new_nfa_index = nfa.start + 1;
+    // Create an EPSILON transition from the new start state to the old start state.
+    insertIntSet(new_nfa_index, &new_nfa.transition[0][EPSILON]);
+
+    // Copy transitions
+    int i, symbol;
+    for (i = 0; i < nfa.nstates; i++){
+        for (symbol = 0; symbol < 129; symbol++) {
+            if (! isEmptyIntSet(nfa.transition[i][symbol])){
+                intSet transitions = addToAllIntSetItems(1, nfa.transition[i][symbol]);
+                new_nfa.transition[new_nfa_index][symbol] = copyIntSet(transitions);
+            }
+        }
+        new_nfa_index++;
     }
 
-    // Add final state.
-    insertIntSet(i, &new_nfa.final);
+    // Create an epsilon transition from each old final state to the new final state.
+    intSet final_states_copy = copyIntSet(nfa.final);
+    while(! isEmptyIntSet(final_states_copy)){
+        intSet old_final_states = addToAllIntSetItems(1, nfa.final);
+        int state = chooseFromIntSet(old_final_states);
+        deleteIntSet(state, &old_final_states);
 
-    // Add epsilon transition from start state to final state.
-    insertIntSet(i, &new_nfa.transition[new_nfa.start][EPSILON]);
+        insertIntSet(new_final_state, &new_nfa.transition[state][EPSILON]);
+    }
+
+    // Add an epsilon transition from the start state to the final state.
+    insertIntSet(new_final_state, &new_nfa.transition[new_nfa.start][EPSILON]);
 
     return new_nfa;
 }
 
+
+// ************************************* ERRADO!!! MUDAR KLEENE
 nfa positiveClosureNFA(nfa nfa){
     // Add an initial and a final state.
     struct nfa new_nfa = makeNFA(nfa.nstates + 2);
@@ -493,17 +519,23 @@ nfa positiveClosureNFA(nfa nfa){
         }
         new_nfa_index++;
     }
-    int old_final_state = nfa.nstates;
     int old_start_state = new_nfa.start + 1;
 
-    // Add an epsilon transition from the old final state to the old start state.
-    insertIntSet(old_start_state, &new_nfa.transition[old_final_state][EPSILON]);
+    // Add an epsilon transition from each old final state to the old start state. And an epsilon transition to the new final state.
+    intSet old_final_states = addToAllIntSetItems(1, nfa.final);
+    while (! isEmptyIntSet(old_final_states)){
+        int state = chooseFromIntSet(old_final_states);
+        deleteIntSet(state, &old_final_states);
 
-    // Create an epsilon transition from the old final state to the new final state.
-    insertIntSet(new_nfa_index, &new_nfa.transition[old_final_state][EPSILON]);
-    intSet final_states = makeEmptyIntSet();
-    insertIntSet(new_nfa_index, &final_states);
-    new_nfa.final = copyIntSet(final_states);
+        insertIntSet(old_start_state, &new_nfa.transition[state][EPSILON]);
+        // Create an epsilon transition from each old final state to the new final state.
+        insertIntSet(new_nfa_index, &new_nfa.transition[state][EPSILON]);
+    }
+
+
+    intSet final_state = makeEmptyIntSet();
+    insertIntSet(new_nfa_index, &final_state);
+    new_nfa.final = copyIntSet(final_state);
 
     return new_nfa;
 }
