@@ -529,6 +529,8 @@ nfa regexpToNFA(char* regexp){
         for (i = 0; i <= 127; i++){
             insertIntSet(1, &nfa.transition[0][i]);
         }
+    }else if(strcmp(regexp, "epsilon") == 0){
+        insertIntSet(1, &nfa.transition[0][128]);
     }else {
         ScannerDefinition *definition;
         definition = searchDefinition(regexp);
