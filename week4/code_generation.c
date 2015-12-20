@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include "code_generation.h"
 
+int final_states[];
+char* actions[];
+char* tokens[];
+
 void createDFATable(dfa dfa, FILE *file){
     int state, symbol;
     printf("Numero de estados: %d \n", dfa.nstates);
@@ -39,5 +43,42 @@ void createDFATable(dfa dfa, FILE *file){
 }
 
 void addDFADeclaration(dfa dfa, unsigned int dfa_count, FILE *file){
+    fprintf(file, "static int dfa_table%d[%d][128] = ", dfa_count, dfa.nstates);
+    createDFATable(dfa, file);
+}
 
+void addFinalStatesDeclaration(dfa dfa, unsigned int dfa_count){
+    intSet final_states_copy = copyIntSet(dfa.final);
+    int final_states_count = 0;
+
+    while(!isEmptyIntSet(final_states_copy)){
+        int state = chooseFromIntSet(final_states_copy);
+        deleteIntSet(state, &final_states_copy);
+        final_states_count++;
+    }
+
+    fpintf(file, "int final_states_dfa%d[%d] = {", dfa_count, final_states_count);
+    final_states_copy = copyIntSet(dfa.final);
+
+    int i = 1;
+    while (!isEmptyIntSet(final_states_copy)) {
+        int state = chooseFromIntSet(final_states_copy);
+        deleteIntSet(state, &final_states_copy);
+        if (i == final_states_count){
+            fprintf(file, "%d};\n");
+        }else{
+            fprintf(file, "%d, ", state);
+            i++;
+        }
+
+    }
+}
+
+
+
+void addItem(dfa dfa, unsigned int dfa_count, FILE *file){
+    addDFADeclaration(dfa, dfa_count, file);
+    addFinalStatesDeclaration(dfa, dfa_count, file);
+    // add tokens
+    // add actions
 }
