@@ -77,6 +77,11 @@ void addFinalStatesDeclaration(unsigned int dfa_index, FILE* file){
     }
 }
 
+void addStartStateDeclaration(unsigned int dfa_index, FILE *file){
+    dfa dfa = dfas[dfa_index];
+    fprintf(file, "int start_state_dfa%d = %d;\n", dfa_index, dfa.start);
+}
+
 void addTokenDeclaration(unsigned int dfa_index, FILE *file){
     fprintf(file, "char* token_dfa%d = \"%s\";\n", dfa_index, tokens[dfa_index]);
 }
@@ -87,6 +92,7 @@ void addActionsDeclaration(unsigned int dfa_index, FILE *file){
 
 void addItem(unsigned int dfa_index, FILE *file){
     addDFADeclaration(dfa_index, file);
+    addStartStateDeclaration(dfa_index, file);
     addFinalStatesDeclaration(dfa_index, file);
     addTokenDeclaration(dfa_index, file);
     addActionsDeclaration(dfa_index, file);
