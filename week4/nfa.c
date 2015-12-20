@@ -441,7 +441,7 @@ nfa kleeneClosureNFA(nfa nfa){
         }
         new_nfa_index++;
     }
-    int old_start_state = new_nfa.start + 1;
+    int old_start_state = nfa.start + 1;
 
     // Add an epsilon transition from each old final state to the old start state. And an epsilon transition to the new final state.
     intSet old_final_states = addToAllIntSetItems(1, nfa.final);
@@ -523,7 +523,7 @@ nfa positiveClosureNFA(nfa nfa){
         }
         new_nfa_index++;
     }
-    int old_start_state = new_nfa.start + 1;
+    int old_start_state = nfa.start + 1;
 
     // Add an epsilon transition from each old final state to the old start state. And an epsilon transition to the new final state.
     intSet old_final_states = addToAllIntSetItems(1, nfa.final);
