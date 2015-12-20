@@ -500,6 +500,9 @@ nfa optionalOperationNFA(nfa nfa){
     // Add an epsilon transition from the start state to the final state.
     insertIntSet(new_final_state, &new_nfa.transition[new_nfa.start][EPSILON]);
 
+    // Set final state
+    insertIntSet(new_final_state, &new_nfa.final);
+
     return new_nfa;
 }
 
