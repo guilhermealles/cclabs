@@ -1,7 +1,13 @@
-#ifndef CODE_GENERATION.H
-#define CODE_GENERATION.H
+#ifndef CODE_GENERATION_H
+#define CODE_GENERATION_H
 
-void createDFATable(dfa dfa, FILE *file);
-void addDFADeclaration(dfa dfa, unsigned int dfa_count, FILE *file);
+void createDFATable(unsigned int dfa_index, FILE *file);
+void addDFADeclaration(unsigned int dfa_index, FILE *file);
+void addStartStateDeclaration(unsigned int dfa_index, FILE *file)
+void addFinalStatesDeclaration(unsigned int dfa_index, FILE* file);
+void addTokenDeclaration(unsigned int dfa_index, FILE *file);
+void addActionsDeclaration(unsigned int dfa_index, FILE *file);
+void addItem(unsigned int dfa_index, FILE *file);
+
 
 #endif
