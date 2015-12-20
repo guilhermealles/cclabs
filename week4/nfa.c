@@ -482,9 +482,8 @@ nfa optionalOperationNFA(nfa nfa){
     }
 
     // Create an epsilon transition from each old final state to the new final state.
-    intSet final_states_copy = copyIntSet(nfa.final);
-    while(! isEmptyIntSet(final_states_copy)){
-        intSet old_final_states = addToAllIntSetItems(1, nfa.final);
+    intSet old_final_states = addToAllIntSetItems(1, nfa.final);
+    while(! isEmptyIntSet(old_final_states)){
         int state = chooseFromIntSet(old_final_states);
         deleteIntSet(state, &old_final_states);
 
@@ -529,7 +528,6 @@ nfa positiveClosureNFA(nfa nfa){
         // Create an epsilon transition from each old final state to the new final state.
         insertIntSet(new_nfa_index, &new_nfa.transition[state][EPSILON]);
     }
-
 
     intSet final_state = makeEmptyIntSet();
     insertIntSet(new_nfa_index, &final_state);
