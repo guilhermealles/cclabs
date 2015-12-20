@@ -366,13 +366,13 @@ nfa uniteNFAs(nfa nfa1, nfa nfa2){
 }
 
 
-// Concatenate NFAs nfa1 and nfa2. The start state will be the start state of nfa1 and the final state will be the final state of nfa2. The final state of nfa1 and the start state of nfa2 will be merged into one intermediate state.
+// Concatenate NFAs nfa1 and nfa2. The start state will be the start state of nfa1 and the final state will be the final state of nfa2.
+//The final state of nfa1 and the start state of nfa2 will be merged into one intermediate state.
 nfa concatenateNFAs(nfa nfa1, nfa nfa2){
-    unsigned int states_count = nfa1.nstates + nfa2.nstates - 1;
+    unsigned int states_count = nfa1.nstates + nfa2.nstates;
     nfa concatenated_nfa = makeNFA(states_count);
 
     concatenated_nfa.start = nfa1.start;
-    unionIntSet(&concatenated_nfa.final, nfa2.final);
 
     // Copy nfa1 to the new nfa.
     int i;
@@ -409,7 +409,14 @@ nfa concatenateNFAs(nfa nfa1, nfa nfa2){
         }
         i++;
     }
-    concatenated_nfa.final = copyIntSet(addToAllIntSetItems(last_nfa1_state, nfa2.final));
+
+    intSet final_states = addToAllIntSetItems(last_nfa1_state, nfa2.final);
+    while(! isEmptyIntSet(final_states)){
+        int state = chooseFromIntSet(final_states);
+        deleteIntSet(state, &final_states);
+        insertIntSet(concatenated_nfa.nstates-1, &concatenated_nfa.transition[state][EPSILON]);
+    }
+    insertIntSet(concatenated_nfa.nstates-1, &concatenated_nfa.final);
     return concatenated_nfa;
 }
 
