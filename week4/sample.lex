@@ -13,6 +13,6 @@ section defines
 end section defines;
 
 section regexps
-    regexp digit+.('.'.digit*)?.('e'.('+'|'-'|epsilon).digit+)?;
-    token NUMBER;
+    regexp letter.(letter|digit)*;
+    token IDENTIFIER;
 end section regexps;
