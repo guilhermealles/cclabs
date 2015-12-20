@@ -13,6 +13,6 @@ section defines
 end section defines;
 
 section regexps
-    regexp letter.(letter|digit)*;
-    token IDENTIFIER;
+    regexp { '<'; '<'.'='; '<'.'>'; '>'.'='; '>' };
+        token RELOP;
 end section regexps;

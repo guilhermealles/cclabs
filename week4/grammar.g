@@ -28,7 +28,7 @@ Input                   : SpecificationFile
 SpecificationFile       :
                             [BEGIN_SECTION_OPTIONS OptionsSection END_SECTION_OPTIONS SEMICOLON]?
                             [BEGIN_SECTION_DEFINES {initializeDefinitionsSection();} DefinesSection END_SECTION_DEFINES SEMICOLON]?
-                            [BEGIN_SECTION_REGEXPS {initializeRegexTrees();} RegExpsSection END_SECTION_REGEXPS SEMICOLON {printOptions(); printDefinitions(); exit(EXIT_SUCCESS);}]
+                            [BEGIN_SECTION_REGEXPS {initializeRegexTrees();} RegExpsSection END_SECTION_REGEXPS SEMICOLON {printOptions(); printDefinitions(); printTokensAndActions(); exit(EXIT_SUCCESS);}]
                         ;
 
 OptionsSection          :
@@ -56,17 +56,20 @@ DefinesSection
                             ;
 
 RegExpsSection          :
-                            [REGEXP_DEF [RegularExpressionSet | REGEXP_EOF | REGEXP_ANYCHAR] SEMICOLON { puts("Successfully added one regex!"); }
-                             [[TOKEN_DEF IDENTIFIER SEMICOLON] | [NO_TOKEN_DEF SEMICOLON]]
-                             [[ACTION_DEF IDENTIFIER SEMICOLON] | [NO_ACTION_DEF SEMICOLON]]?]+
+                            [REGEXP_DEF [RegularExpressionSet | REGEXP_EOF | REGEXP_ANYCHAR] SEMICOLON
+                             [[TOKEN_DEF IDENTIFIER { addToken(yytext); } SEMICOLON] | [NO_TOKEN_DEF { addNoToken(); } SEMICOLON]]
+                             { addDefaultAction(); }[[ACTION_DEF IDENTIFIER { addAction(yytext); } SEMICOLON] | [NO_ACTION_DEF { addNoAction(); } SEMICOLON]]?]+
                         ;
 
 RegularExpressionSet
-{ RegexTree *r; RegexTree *tree_ptr; }   :
-                                            { r = makeNewRegexTree(); tree_ptr = r; } [RegularExpression(tree_ptr)] { evaluateRegexTree(r); addTreeToArray(r); saveNFA("out.nfa", r->regex_nfa);}
-                                        |   [OPEN_CURLYBRACES { r = makeNewRegexTree(); tree_ptr = r; } RegularExpression(tree_ptr) { addTreeToArray(r); }
-                                            [SEMICOLON { r = makeNewRegexTree(); tree_ptr = r; } RegularExpression(tree_ptr) { addTreeToArray(r); } ]* CLOSE_CURLYBRACES]
-                                        ;
+{   RegexTree *rSet;
+    RegexTree *new_regex_ptr;
+    RegexTree *r;
+    RegexTree *tree_ptr; }  :
+                                { r = makeNewRegexTree(); tree_ptr = r; } [RegularExpression(tree_ptr)] { evaluateRegexTree(r); addTreeToArray(r); }
+                            |   [OPEN_CURLYBRACES { rSet = makeNewRegexSetTree(); new_regex_ptr = addRegexToRegexSetTree(rSet); } RegularExpression(new_regex_ptr)
+                                    [SEMICOLON { new_regex_ptr = addRegexToRegexSetTree(rSet); } RegularExpression(new_regex_ptr)]* CLOSE_CURLYBRACES { evaluateRegexTree(rSet); addTreeToArray(rSet); saveNFA("out.nfa", rSet->regex_nfa);}]
+                            ;
 
 RegularExpression(RegexTree *node)
 { RegexTree *child; int operation_type; }   :

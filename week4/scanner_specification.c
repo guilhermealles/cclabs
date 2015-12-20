@@ -11,6 +11,15 @@ static ScannerDefinition *definitions_section;
 static unsigned int regex_trees_count = 0;
 static RegexTree *regex_trees;
 
+// Array of strings with the name of the tokens to be returned for each accepted regex.
+// The indices match the ones in the regex_trees array.
+// No tokens are defined by the string "NO TOKEN".
+static char **regex_tokens;
+// Array of function names to be called when a regex accepts some input.
+// The indices match the ones in the regex_trees array.
+// No actions are defined by the string "NO ACTION".
+static char **regex_actions;
+
 void initializeScannerOptions(){
     options_section.lexer_routine = "yylex";
     options_section.lexeme_name = "yytext";
@@ -197,6 +206,8 @@ int parseOperationsToType (char *lexeme) {
 void initializeRegexTrees() {
     regex_trees_count = 0;
     regex_trees = malloc(sizeof(RegexTree) * regex_trees_count);
+    regex_tokens = malloc(sizeof(char*) * regex_trees_count);
+    regex_actions = malloc(sizeof(char*) * regex_trees_count);
 }
 
 RegexTree* makeNewRegexTree() {
@@ -207,6 +218,34 @@ RegexTree* makeNewRegexTree() {
     tree->children = NULL;
 
     return tree;
+}
+
+// This function is used when a set of regexes are provided. The idea is to consider all the regexes
+// in the set as a single RegexTree, with the union operator between the regexes.
+RegexTree* makeNewRegexSetTree() {
+    RegexTree *tree = makeNewRegexTree();
+
+    return tree;
+}
+RegexTree* addRegexToRegexSetTree(RegexTree *tree_root) {
+    RegexTree *new_regex;
+
+    if (tree_root->children_count == 0) {
+        // This is the first regex to be added - do not add the union operator
+        RegexTree *term = regexTreeAddTerm(tree_root);
+        RegexTree *factor = regexTreeAddFactor(term);
+        new_regex = regexTreeAddRegex(factor);
+    }
+    else {
+        // There are already other regexes in this tree. First add a union operator, then the new regex.
+        regexTreeAddBinary(tree_root, BINARYOP_UNION);
+
+        RegexTree *term = regexTreeAddTerm(tree_root);
+        RegexTree *factor = regexTreeAddFactor(term);
+        new_regex = regexTreeAddRegex(factor);
+    }
+
+    return new_regex;
 }
 
 void makeRegexTreeNode(RegexTree *dest, int node_type) {
@@ -393,4 +432,48 @@ unsigned int addTreeToArray (RegexTree *tree_to_add) {
     regex_trees[new_tree_index] = *tree_to_add;
     regex_trees_count++;
     return new_tree_index;
+}
+
+void addToken(char *lexeme) {
+    // Expand the array of strings
+    regex_tokens = realloc(regex_tokens, sizeof(char*) * regex_trees_count);
+
+    regex_tokens[regex_trees_count-1] = malloc(sizeof(char) * (strlen(lexeme)+1));
+    strcpy(regex_tokens[regex_trees_count-1], lexeme);
+}
+
+void addNoToken() {
+    char *notoken_str = "NO TOKEN";
+    // Expand the array of strings
+    regex_tokens = realloc(regex_tokens, sizeof(char*) * regex_trees_count);
+
+    regex_tokens[regex_trees_count-1] = malloc(sizeof(char) * (strlen(notoken_str)+1));
+    strcpy(regex_tokens[regex_trees_count-1], notoken_str);
+}
+
+void addDefaultAction() {
+    // Expand the array of strings
+    regex_actions = realloc(regex_actions, sizeof(char*) * regex_trees_count);
+
+    regex_actions[regex_trees_count-1] = malloc(sizeof(char) * (strlen(options_section.default_action_routine) + 1));
+    strcpy(regex_actions[regex_trees_count-1], options_section.default_action_routine);
+}
+
+void addAction(char *lexeme) {
+    regex_actions[regex_trees_count-1] = realloc(regex_actions[regex_trees_count-1], sizeof(char) * (strlen(lexeme)+1));
+    strcpy(regex_actions[regex_trees_count-1], lexeme);
+}
+
+void addNoAction() {
+    char *noaction_str = "NO ACTION";
+
+    regex_actions[regex_trees_count-1] = realloc(regex_actions[regex_trees_count-1], sizeof(char) * (strlen(noaction_str) + 1));
+    strcpy(regex_actions[regex_trees_count-1], noaction_str);
+}
+
+void printTokensAndActions() {
+    int i=0;
+    for (i=0; i<regex_trees_count; i++) {
+        printf("Regex tree with index %d has token %s and action %s.\n", i, regex_tokens[i], regex_actions[i]);
+    }
 }

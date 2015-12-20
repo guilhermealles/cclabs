@@ -62,6 +62,8 @@ void printDefinitions();
 int parseOperationsToType (char *lexeme);
 void initializeRegexTrees();
 RegexTree* makeNewRegexTree();
+RegexTree* makeNewRegexSetTree();
+RegexTree* addRegexToRegexSetTree(RegexTree *tree_root);
 void makeRegexTreeNode(RegexTree *dest, int node_type);
 void makeRegexTreeValueNode(RegexTree *dest, nfa regex_nfa);
 RegexTree *regexTreeAddTerm (RegexTree *node_to_add);
@@ -73,5 +75,12 @@ RegexTree* regexTreeAddUnary (RegexTree *node_to_add, int unary_op);
 void evaluateRegexTree(RegexTree *root);
 nfa evaluateRegexTreeRec(RegexTree *tree);
 unsigned int addTreeToArray (RegexTree *tree_to_add);
+void addToken(char *lexeme);
+void addNoToken();
+void addDefaultAction();
+void addAction(char *lexeme);
+void addNoAction();
+
+void printTokensAndActions();
 
 #endif
