@@ -11,6 +11,7 @@ void addHeaders(FILE *file) {
     fprintf(file, "#include <string.h>\n");
     fprintf(file, "#include \"nfa.h\"\n");
     fprintf(file, "#include \"intset.h\"\n");
+    fprintf(file, "#include \"scanner_functions.h\"\n");
 
     fprintf(file, "\n\n");
 }
@@ -26,13 +27,14 @@ void declareGlobalVariables(FILE *file) {
 
 void declareReadDFAsFunction(FILE *file) {
     fprintf(file, "void readDFAs() { \n");
-    fprintf(file, "dfa = malloc(sizeof(dfa) * dfa_count);\n");
+    fprintf(file, "dfas = malloc(sizeof(dfa) * dfa_count);\n");
     fprintf(file, "int i;\n");
     fprintf(file, "for (i = 0; i < dfa_count; i++){\n");
     fprintf(file, "char filename[21];\n");
     fprintf(file, "sprintf(filename, \"dfa%%d.dfa\", i);\n");
     fprintf(file, "dfas[i] = readNFA(filename);\n");
     fprintf(file, "}\n");
+    fprintf(file, "} \n");
 }
 
 void declareFillTokensFunction(FILE *file) {
@@ -70,7 +72,7 @@ void declareFillActionsFunction(FILE *file) {
 }
 
 void declareLexerFunction(FILE *file){
-    fprintf(file, "void %s(){ \n", getOptionsSection().lexer_routine);
+    fprintf(file, "int %s(){ \n", getOptionsSection().lexer_routine);
     fprintf(file, "int *accepted_sizes = malloc(sizeof(int) * dfa_count);\n");
     fprintf(file, "while(input_buffer[0] != '\\");
     fprintf(file, "0') { \n");
@@ -80,11 +82,7 @@ void declareLexerFunction(FILE *file){
     fprintf(file, "}\n");
     fprintf(file, "int dfa_index_accept = -1;\n");
     fprintf(file, "int accepted_size = getGreatest(accepted_sizes, dfa_count, &dfa_index_accept);\n");
-    fprintf(file, "if (dfa_index_accept == -1 || accepted_size == -1){\n");
-    fprintf(file, "fprintf(stderr, \"Error on run(): greatest string size not found.\n\");\n");
-    fprintf(file, "exit(EXIT_FAILURE);\n");
-    fprintf(file, "}\n");
-    fprintf(file, "else if (accepted_size == 0) {\n");
+    fprintf(file, "if (accepted_size == 0) {\n");
     fprintf(file, "printf(\"%%c\", input_buffer[0]);\n");
     fprintf(file, "input_buffer = getNewInput(input_buffer, 1);\n");
     fprintf(file, "}\n");
@@ -93,17 +91,18 @@ void declareLexerFunction(FILE *file){
     fprintf(file, "updateLexeme(accepted_size, accepted_string);\n");
     fprintf(file, "input_buffer = getNewInput(input_buffer, accepted_size);\n");
     fprintf(file, "actions[dfa_index_accept]();\n"); // Call action function;
-    fprintf(file, "if (tokens[dfa_index_acceppt] != -1) { \n");
+    fprintf(file, "if (tokens[dfa_index_accept] != -1) { \n");
     fprintf(file, "return tokens[dfa_index_accept];\n");
     fprintf(file, "}\n");
     fprintf(file, "}\n");
     fprintf(file, "}\n");
+    fprintf(file, "return -1; \n");
     fprintf(file, "}\n");
 }
 
 void declareUpdateLexemeFunction(FILE *file){
     fprintf(file, "void updateLexeme(int new_size, char* string){\n");
-    fprintf(file, "%s = realloc(lexeme, sizeof(char) * (new_size + 1));\n", getOptionsSection().lexeme_name);
+    fprintf(file, "%s = realloc(%s, sizeof(char) * (new_size + 1));\n", getOptionsSection().lexeme_name, getOptionsSection().lexeme_name);
     fprintf(file, "strcpy(%s, string);\n", getOptionsSection().lexeme_name);
     fprintf(file, "}\n");
 }
@@ -122,10 +121,6 @@ void declareGetFirstNCharsFunction(FILE *file){
 void declareGetNewInputFunction(FILE *file){
     fprintf(file, "char* getNewInput(char* input, int trimming_size){\n");
     fprintf(file, "int old_size = (int)strlen(input);\n");
-    fprintf(file, "if (trimming_size > old_size) {\n");
-    fprintf(file, "fprintf(stderr, \"Error: trying to trim a string by %%d chars when strlen is %%d.\n\", trimming_size, old_size);\n");
-    fprintf(file, "exit(EXIT_FAILURE);\n");
-    fprintf(file, "}\n");
     fprintf(file, "int new_size = old_size - trimming_size;\n");
     fprintf(file, "char* new_input = malloc(sizeof(char) * (new_size+1));\n");
     fprintf(file, "int i, new_index = 0;\n");
@@ -183,14 +178,20 @@ void declareGetNextStateFunction(FILE *file){
     fprintf(file, "}else{\n");
     fprintf(file, "int s = chooseFromIntSet(next_state_intset);\n");
     fprintf(file, "deleteIntSet(s, &next_state_intset);\n");
-    fprintf(file, "if (! isEmptyIntSet(next_state_intset)){\n");
-    fprintf(file, "fprintf(stderr, \"Error on getNextState(): Not a DFA. Transition: source state %%d, symbol %%d\n\", state, symbol);\n");
-    fprintf(file, "exit(EXIT_FAILURE);\n");
-    fprintf(file, "}\n");
     fprintf(file, "freeIntSet(next_state_intset);\n");
     fprintf(file, "return s;\n");
     fprintf(file, "}\n");
     fprintf(file, "}\n");
+}
+
+void declareMain(FILE *file) {
+    fprintf(file, "int main(int argc, char **argv) {\n");
+    fprintf(file, "input_buffer = malloc(1024*1024); \n");
+    fprintf(file, "while(1) { \n");
+    fprintf(file, "scanf(\"%%s\", input_buffer); \n");
+    fprintf(file, "%s();\n", getOptionsSection().lexer_routine);
+    fprintf(file, "} \n");
+    fprintf(file, "} \n");
 }
 
 void createOutputCode(char* filename){
@@ -214,6 +215,7 @@ void createOutputCode(char* filename){
     declareGetFirstNCharsFunction(file);
     declareGetNewInputFunction(file);
     declareLexerFunction(file);
+    declareMain(file);
 
     fclose(file);
 }

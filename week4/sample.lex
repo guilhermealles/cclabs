@@ -13,14 +13,22 @@ section defines
 end section defines;
 
 section regexps
-    regexp { '<'; '<'.'='; '<'.'>'; '>'.'='; '>' };
-        token RELOP;
+    regexp 'i'.'n'.'p'.'u'.'t';
+        no token;
+        action printFoundInput;
+    regexp 'o'.'u'.'t'.'p'.'u'.'t';
+        no token;
+        action printFoundOutput;
+    regexp 'w'.'h'.'i'.'l'.'e';
+        no token;
+        action printFoundWhile;
     regexp 'd'.'o';
-        token DOTOKEN;
+        no token;
+        action printFoundDo;
     regexp 'i'.'f';
-        token IFTOKEN;
+        no token;
+        action printFoundIf;
     regexp 't'.'h'.'e'.'n';
-        token THENTOKEN;
-    regexp 'e'.'l'.'s'.'e';
-        token ELSETOKEN;
+        no token;
+        action printFoundThen;
 end section regexps;
