@@ -364,6 +364,24 @@ RegexTree* regexTreeAddUnary (RegexTree *node_to_add, int unary_op){
     return &node_to_add->children[new_children_index];
 }
 
+RegexTree* regexTreeCreateEOFTree() {
+    RegexTree *tree = makeNewRegexTree();
+    RegexTree *term = regexTreeAddTerm(tree);
+    RegexTree *factor = regexTreeAddFactor(term);
+    RegexTree *value = regexTreeAddValue(factor, "eof");
+
+    return tree;
+}
+
+RegexTree* regexTreeCreateAnycharTree() {
+    RegexTree *tree = makeNewRegexTree();
+    RegexTree *term = regexTreeAddTerm(tree);
+    RegexTree *factor = regexTreeAddFactor(term);
+    RegexTree *value = regexTreeAddValue(factor, "anychar");
+
+    return tree;
+}
+
 void evaluateRegexTree(RegexTree *root) {
     evaluateRegexTreeRec(root);
 }
@@ -481,19 +499,16 @@ void printTokensAndActions() {
     }
 }
 
-void mergeNFAsIntoDFA() {
+void convertAndSaveDFAs() {
     nfa_array = malloc(sizeof(nfa) * regex_trees_count);
+    dfa *dfa_array = malloc(sizeof(dfa) * regex_trees_count);
+    char filename[21];
 
     int i;
     for(i=0; i<regex_trees_count; i++) {
         nfa_array[i] = regex_trees[i].regex_nfa;
+        dfa_array[i] = convertNFAtoDFA(nfa_array[i]);
+        sprintf(filename, "dfa%d.dfa", i);
+        saveNFA(filename, dfa_array[i]);
     }
-    printf("DEBUG> Regex_trees_count = %d.\n", regex_trees_count);
-    nfa huge_nfa = mergeNFAs(nfa_array, regex_trees_count);
-    printf("DEBUG> After merge.\n");
-
-    huge_dfa = convertNFAtoDFA(huge_nfa);
-    printf("DEBUG> After conversion.\n");
-
-    saveNFA("out.dfa", huge_dfa);
 }

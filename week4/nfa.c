@@ -4,6 +4,7 @@
 #include <string.h>
 #include "nfa.h"
 #include "intset.h"
+#include "scanner_specification.h"
 
 int mapping_current_size;
 unsigned long mapping_total_size;
@@ -237,14 +238,12 @@ dfa convertNFAtoDFA(nfa n) {
 
     dfa final_dfa = makeNFA(1);
     int visited_count = 0;
-    //*** Setar estado inicial!!!!
 
     // Checks if there's a new state to expand.
     while (visited_count < mapping_current_size) {
         int i;
         for (i=0; i<EPSILON; i++) {
             intSet state = epsilonStarClosureSet(movementSet(epsilonStarClosureSet(mapping[visited_count], n), i, n), n);
-            printlnIntSet(state);
             if (!isEmptyIntSet(state)) {
                 // If the state is not yet mapped/expanded
                 if (alreadyMapped(state) == -1) {
@@ -584,7 +583,53 @@ nfa positiveClosureNFA(nfa nfa){
     return new_nfa;
 }
 
+// Given a regexp LITERAL_CHAR, LITERAL_INT or an ASCII value, creates its correspondent NFA.
+nfa regexpToNFA(char* regexp){
+    nfa nfa = makeNFA(2);
+    nfa.start = 0;
 
+    // Add a transition with the given symbol from the start state to the final state 1.
+    if(regexp[0] == '\''){
+        insertIntSet(1, &nfa.transition[0][(int)regexp[1]]);
+    }
+    else if(regexp[0] == '#'){
+        char* symb = strtok(regexp, "#");
+        int symbol = atoi(symb);
+        insertIntSet(1, &nfa.transition[0][symbol]);
+    }else if(strcmp(regexp, "eof") == 0){
+        // EOF ASCII symbol is 0
+        insertIntSet(1, &nfa.transition[0][0]);
+    }else if(strcmp(regexp, "anychar") == 0){
+        int i;
+        for (i = 0; i <= 127; i++){
+            insertIntSet(1, &nfa.transition[0][i]);
+        }
+    }else if(strcmp(regexp, "epsilon") == 0){
+        insertIntSet(1, &nfa.transition[0][128]);
+    }else {
+        ScannerDefinition *definition;
+        definition = searchDefinition(regexp);
+
+        if (definition != NULL){
+            intSet expansion_copy = copyIntSet(definition->definition_expansion);
+            // Add a transition for each symbol that the definition represents.
+            while (! isEmptyIntSet(expansion_copy)) {
+                int symbol = chooseFromIntSet(expansion_copy);
+                deleteIntSet(symbol, &expansion_copy);
+                insertIntSet(1, &nfa.transition[0][symbol]);
+            }
+        }
+        else{
+            fprintf(stderr, "Error on regexpToNFA: definition \'%s\' not found.\n", regexp);
+            exit(EXIT_FAILURE);
+        }
+    }
+    intSet final_state = makeEmptyIntSet();
+    insertIntSet(1, &final_state);
+    nfa.final = copyIntSet(final_state);
+
+    return nfa;
+}
 
 void printMapping() {
     int i;

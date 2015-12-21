@@ -28,7 +28,7 @@ Input                   : SpecificationFile
 SpecificationFile       :
                             [BEGIN_SECTION_OPTIONS OptionsSection END_SECTION_OPTIONS SEMICOLON]?
                             [BEGIN_SECTION_DEFINES {initializeDefinitionsSection();} DefinesSection END_SECTION_DEFINES SEMICOLON]?
-                            [BEGIN_SECTION_REGEXPS {initializeRegexTrees();} RegExpsSection END_SECTION_REGEXPS SEMICOLON {printOptions(); printDefinitions(); printTokensAndActions(); exit(EXIT_SUCCESS);}]
+                            [BEGIN_SECTION_REGEXPS {initializeRegexTrees();} RegExpsSection END_SECTION_REGEXPS SEMICOLON {printOptions(); printDefinitions(); printTokensAndActions(); convertAndSaveDFAs(); exit(EXIT_SUCCESS);}]
                         ;
 
 OptionsSection          :
@@ -55,8 +55,9 @@ DefinesSection
                                 CLOSE_BRACES SEMICOLON]* {free(identifier);}
                             ;
 
-RegExpsSection          :
-                            [REGEXP_DEF [RegularExpressionSet | REGEXP_EOF | REGEXP_ANYCHAR] SEMICOLON
+RegExpsSection
+{   RegexTree *r; }     :
+                            [REGEXP_DEF [RegularExpressionSet | { r = regexTreeCreateEOFTree(); evaluateRegexTree(r); addTreeToArray(r); } REGEXP_EOF | { r = regexTreeCreateAnycharTree(); evaluateRegexTree(r); addTreeToArray(r); } REGEXP_ANYCHAR] SEMICOLON
                              [[TOKEN_DEF IDENTIFIER { addToken(yytext); } SEMICOLON] | [NO_TOKEN_DEF { addNoToken(); } SEMICOLON]]
                              { addDefaultAction(); }[[ACTION_DEF IDENTIFIER { addAction(yytext); } SEMICOLON] | [NO_ACTION_DEF { addNoAction(); } SEMICOLON]]?]+
                         ;
