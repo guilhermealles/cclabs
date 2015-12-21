@@ -225,7 +225,7 @@ LLread();
 LLtcnt[7]--;
 LL_SCANDONE(263);/* SEMICOLON */
 #line 31 "parser.g"
-{printOptions(); printDefinitions(); printTokensAndActions(); convertAndSaveDFAs(); exit(EXIT_SUCCESS);}
+{printOptions(); printDefinitions(); printTokensAndActions(); convertAndSaveDFAs(); createOutputCode("etaporracaralho.c"); exit(EXIT_SUCCESS);}
 #line 230 "parser.c"
 }
 static void LL2_OptionsSection(void){

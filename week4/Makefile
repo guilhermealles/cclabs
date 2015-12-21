@@ -1,7 +1,10 @@
 all: scannergenerator
 
-scannergenerator: parser lexer intset.o nfa.o scanner_specification.o
-	gcc -o scannergenerator parser.o lexer.o scanner_specification.o intset.o nfa.o -ll -lm
+scannergenerator: parser lexer intset.o nfa.o scanner_specification.o code_generator.o
+	gcc -o scannergenerator parser.o lexer.o scanner_specification.o intset.o nfa.o code_generator.o -ll -lm
+
+code_generator.o: code_generator.c code_generator.h intset.o nfa.o scanner_specification.o
+	gcc -c code_generator.c
 
 scanner_specification.o: scanner_specification.c scanner_specification.h intset.o nfa.o
 	gcc -c scanner_specification.c
@@ -31,3 +34,4 @@ clean:
 	rm -f lexer.c
 	rm -f *.dfa
 	rm -f *.nfa
+	rm -f scannergenerator

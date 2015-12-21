@@ -28,7 +28,7 @@ Input                   : SpecificationFile
 SpecificationFile       :
                             [BEGIN_SECTION_OPTIONS OptionsSection END_SECTION_OPTIONS SEMICOLON]?
                             [BEGIN_SECTION_DEFINES {initializeDefinitionsSection();} DefinesSection END_SECTION_DEFINES SEMICOLON]?
-                            [BEGIN_SECTION_REGEXPS {initializeRegexTrees();} RegExpsSection END_SECTION_REGEXPS SEMICOLON {printOptions(); printDefinitions(); printTokensAndActions(); convertAndSaveDFAs(); exit(EXIT_SUCCESS);}]
+                            [BEGIN_SECTION_REGEXPS {initializeRegexTrees();} RegExpsSection END_SECTION_REGEXPS SEMICOLON {printOptions(); printDefinitions(); printTokensAndActions(); convertAndSaveDFAs(); createOutputCode("etaporracaralho.c"); exit(EXIT_SUCCESS);}]
                         ;
 
 OptionsSection          :

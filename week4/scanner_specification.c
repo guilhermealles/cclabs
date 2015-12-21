@@ -512,3 +512,23 @@ void convertAndSaveDFAs() {
         saveNFA(filename, dfa_array[i]);
     }
 }
+
+ScannerOptions getOptionsSection() {
+    return options_section;
+}
+
+RegexTree *getRexexTrees() {
+    return regex_trees;
+}
+
+unsigned int getRegexTreeCount() {
+    return regex_trees_count;
+}
+
+char** getRegexTokens() {
+    return regex_tokens;
+}
+
+char** getRegexActions() {
+    return regex_actions;
+}

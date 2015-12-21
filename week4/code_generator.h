@@ -16,6 +16,6 @@ void declareGetNewInputFunction(FILE *file);
 void declareGetGreatestFunction(FILE *file);
 void declareGetSizeOfAcceptedInputFunction(FILE *file);
 void declareGetNextStateFunction(FILE *file);
-void writeFile(char* filename);
+void createOutputCode(char* filename);
 
 #endif /* code_generator_h */

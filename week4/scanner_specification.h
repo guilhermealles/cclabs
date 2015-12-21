@@ -86,4 +86,10 @@ void addNoAction();
 void convertAndSaveDFAs();
 void printTokensAndActions();
 
+ScannerOptions getOptionsSection();
+RegexTree* getRexexTrees();
+unsigned int getRegexTreeCount();
+char **getRegexTokens();
+char **getRegexActions();
+
 #endif

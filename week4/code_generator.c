@@ -5,12 +5,6 @@
 #include "code_generator.h"
 #include "scanner_specification.h"
 
-extern ScannerOptions options_section;
-extern int regex_trees_count;
-extern RegexTree *regex_trees;
-extern char **regex_tokens;
-extern char **regex_actions;
-
 void addHeaders(FILE *file) {
     fprintf(file, "#include <stdio.h>\n");
     fprintf(file, "#include <stdlib.h>\n");
@@ -22,12 +16,12 @@ void addHeaders(FILE *file) {
 }
 
 void declareGlobalVariables(FILE *file) {
-    fprintf(file, "char* %s;\n", options_section.lexeme_name); // Declare lexeme
-    fprintf(file, "unsigned int dfa_count = %d;\n", regex_trees_count); // Declare dfa_count
+    fprintf(file, "char* %s;\n", getOptionsSection().lexeme_name); // Declare lexeme
+    fprintf(file, "unsigned int dfa_count = %d;\n", getRegexTreeCount()); // Declare dfa_count
     fprintf(file, "dfa *dfas;\n"); // Array with DFAs
     fprintf(file, "int *tokens;\n"); // Array with tokens
     fprintf(file, "char *input_buffer; \n"); // The input buffer
-    fprintf(file, "void (*actions[%d]) (void); \n", regex_trees_count);
+    fprintf(file, "void (*actions[%d]) (void); \n", getRegexTreeCount());
 }
 
 void declareReadDFAsFunction(FILE *file) {
@@ -45,12 +39,12 @@ void declareFillTokensFunction(FILE *file) {
     fprintf(file, "void fillTokens() { \n");
     fprintf(file, "tokens = malloc(sizeof(int) * dfa_count); \n");
     int i;
-    for (i=0; i<regex_trees_count; i++) {
-        if (strcmp(regex_tokens, "NO TOKEN")) {
-            fprintf(file, "tokens[%d] = -1", i);
+    for (i=0; i<getRegexTreeCount(); i++) {
+        if (strcmp(getRegexTokens()[i], "NO TOKEN") == 0) {
+            fprintf(file, "tokens[%d] = -1; \n", i);
         }
         else {
-            fprintf(file, "tokens[%d] = %s; \n", i, regex_tokens[i]);
+            fprintf(file, "tokens[%d] = %s; \n", i, getRegexTokens()[i]);
         }
     }
     fprintf(file, "}\n");
@@ -64,21 +58,22 @@ void declareNoActionFunction(FILE *file) {
 void declareFillActionsFunction(FILE *file) {
     fprintf(file, "void fillActions() { \n");
     int i;
-    for (i=0; i<regex_trees_count; i++) {
-        if (strcmp(regex_actions[i], "NO ACTION") == 0) {
+    for (i=0; i<getRegexTreeCount(); i++) {
+        if (strcmp(getRegexActions()[i], "NO ACTION") == 0) {
             fprintf(file, "actions[%d] = &noAction;\n", i);
         }
         else {
-            fprintf(file, "actions[%d] = &%s;\n", i, regex_actions[i]);
+            fprintf(file, "actions[%d] = &%s;\n", i, getRegexActions()[i]);
         }
     }
     fprintf(file, "}\n");
 }
 
 void declareLexerFunction(FILE *file){
-    fprintf(file, "void %s(){ \n", options_section.lexer_routine);
-    fprintf(file, "int *accepted_sizes = malloc(sizeof(int) * dfa_count);");
-    fprintf(file, "while(input_buffer[0] != '\0'){ \n");
+    fprintf(file, "void %s(){ \n", getOptionsSection().lexer_routine);
+    fprintf(file, "int *accepted_sizes = malloc(sizeof(int) * dfa_count);\n");
+    fprintf(file, "while(input_buffer[0] != '\\");
+    fprintf(file, "0') { \n");
     fprintf(file, "int dfa_index; \n");
     fprintf(file, "for (dfa_index = 0; dfa_index < dfa_count; dfa_index++){\n");
     fprintf(file, "accepted_sizes[dfa_index] = getSizeOfAcceptedInput(dfa_index, input_buffer);\n");
@@ -108,8 +103,8 @@ void declareLexerFunction(FILE *file){
 
 void declareUpdateLexemeFunction(FILE *file){
     fprintf(file, "void updateLexeme(int new_size, char* string){\n");
-    fprintf(file, "%s = realloc(lexeme, sizeof(char) * (new_size + 1));\n", options_section.lexeme_name);
-    fprintf(file, "strcpy(%s, string);\n", options_section.lexeme_name);
+    fprintf(file, "%s = realloc(lexeme, sizeof(char) * (new_size + 1));\n", getOptionsSection().lexeme_name);
+    fprintf(file, "strcpy(%s, string);\n", getOptionsSection().lexeme_name);
     fprintf(file, "}\n");
 }
 
@@ -198,7 +193,7 @@ void declareGetNextStateFunction(FILE *file){
     fprintf(file, "}\n");
 }
 
-void writeFile(char* filename){
+void createOutputCode(char* filename){
     FILE *file = fopen(filename, "w");
 
     if(! file){
@@ -209,6 +204,7 @@ void writeFile(char* filename){
     addHeaders(file);
     declareGlobalVariables(file);
     declareReadDFAsFunction(file);
+    declareNoActionFunction(file);
     declareFillTokensFunction(file);
     declareFillActionsFunction(file);
     declareGetNextStateFunction(file);
