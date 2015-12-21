@@ -68,7 +68,7 @@ RegularExpressionSet
     RegexTree *tree_ptr; }  :
                                 { r = makeNewRegexTree(); tree_ptr = r; } [RegularExpression(tree_ptr)] { evaluateRegexTree(r); addTreeToArray(r); }
                             |   [OPEN_CURLYBRACES { rSet = makeNewRegexSetTree(); new_regex_ptr = addRegexToRegexSetTree(rSet); } RegularExpression(new_regex_ptr)
-                                    [SEMICOLON { new_regex_ptr = addRegexToRegexSetTree(rSet); } RegularExpression(new_regex_ptr)]* CLOSE_CURLYBRACES { evaluateRegexTree(rSet); addTreeToArray(rSet); saveNFA("out.nfa", rSet->regex_nfa);}]
+                                    [SEMICOLON { new_regex_ptr = addRegexToRegexSetTree(rSet); } RegularExpression(new_regex_ptr)]* CLOSE_CURLYBRACES { evaluateRegexTree(rSet); addTreeToArray(rSet); }]
                             ;
 
 RegularExpression(RegexTree *node)

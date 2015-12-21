@@ -81,6 +81,7 @@ void addDefaultAction();
 void addAction(char *lexeme);
 void addNoAction();
 
+void mergeNFAsIntoDFA();
 void printTokensAndActions();
 
 #endif

@@ -10,6 +10,8 @@ static ScannerDefinition *definitions_section;
 
 static unsigned int regex_trees_count = 0;
 static RegexTree *regex_trees;
+static nfa *nfa_array;
+dfa huge_dfa;
 
 // Array of strings with the name of the tokens to be returned for each accepted regex.
 // The indices match the ones in the regex_trees array.
@@ -431,6 +433,7 @@ unsigned int addTreeToArray (RegexTree *tree_to_add) {
     regex_trees = realloc(regex_trees, sizeof(RegexTree) * (regex_trees_count+1));
     regex_trees[new_tree_index] = *tree_to_add;
     regex_trees_count++;
+
     return new_tree_index;
 }
 
@@ -476,4 +479,21 @@ void printTokensAndActions() {
     for (i=0; i<regex_trees_count; i++) {
         printf("Regex tree with index %d has token %s and action %s.\n", i, regex_tokens[i], regex_actions[i]);
     }
+}
+
+void mergeNFAsIntoDFA() {
+    nfa_array = malloc(sizeof(nfa) * regex_trees_count);
+
+    int i;
+    for(i=0; i<regex_trees_count; i++) {
+        nfa_array[i] = regex_trees[i].regex_nfa;
+    }
+    printf("DEBUG> Regex_trees_count = %d.\n", regex_trees_count);
+    nfa huge_nfa = mergeNFAs(nfa_array, regex_trees_count);
+    printf("DEBUG> After merge.\n");
+
+    huge_dfa = convertNFAtoDFA(huge_nfa);
+    printf("DEBUG> After conversion.\n");
+
+    saveNFA("out.dfa", huge_dfa);
 }

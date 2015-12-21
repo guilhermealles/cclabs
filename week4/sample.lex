@@ -15,4 +15,12 @@ end section defines;
 section regexps
     regexp { '<'; '<'.'='; '<'.'>'; '>'.'='; '>' };
         token RELOP;
+    regexp 'd'.'o';
+        token DOTOKEN;
+    regexp 'i'.'f';
+        token IFTOKEN;
+    regexp 't'.'h'.'e'.'n';
+        token THENTOKEN;
+    regexp 'e'.'l'.'s'.'e';
+        token ELSETOKEN;
 end section regexps;

@@ -15,9 +15,11 @@ typedef nfa dfa;
 
 static void *safeMalloc(unsigned int sz);
 nfa makeNFA(int nstates);
+void reallocateNfaStates(nfa *n, int new_nstates);
 void freeNFA(nfa n);
 nfa readNFA(char *filename);
 void saveNFA(char *filename, nfa n);
+void reallocateMapping(unsigned long size);
 int alreadyMapped(intSet states);
 intSet epsilonClosure(int state, nfa n);
 intSet epsilonStarClosure(int state, nfa n);
@@ -34,6 +36,7 @@ nfa concatenateNFAs(nfa nfa1, nfa nfa2);
 nfa kleeneClosureNFA(nfa nfa);
 nfa optionalOperationNFA(nfa nfa);
 nfa positiveClosureNFA(nfa nfa);
-nfa regexpToNFA(char* regexp);
+
+void printMapping();
 
 #endif

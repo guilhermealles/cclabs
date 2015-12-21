@@ -4,9 +4,9 @@
 #include <string.h>
 #include "nfa.h"
 #include "intset.h"
-#include "scanner_specification.h"
 
-int mapping_size;
+int mapping_current_size;
+unsigned long mapping_total_size;
 intSet *mapping;
 
 static void *safeMalloc(unsigned int sz) {
@@ -32,6 +32,20 @@ nfa makeNFA(int nstates) {
         }
     }
     return n;
+}
+
+void reallocateNfaStates(nfa *n, int new_nstates) {
+    int old_nstates = n->nstates;
+    n->transition = realloc(n->transition, new_nstates * sizeof(intSet*));
+
+    int s, c;
+    for (s=old_nstates; s<new_nstates; s++) {
+        n->transition[s] = safeMalloc(129*sizeof(intSet));
+        for (c=0; c<=EPSILON; c++) {
+            n->transition[s][c] = makeEmptyIntSet();
+        }
+    }
+    n->nstates = new_nstates;
 }
 
 void freeNFA(nfa n) {
@@ -121,10 +135,15 @@ void saveNFA(char *filename, nfa n) {
     fclose(f);
 }
 
+void reallocateMapping(unsigned long size) {
+    mapping = (intSet*) realloc(mapping, size);
+    mapping_total_size = (int)(size/sizeof(intSet*));
+}
+
 // Returns -1 in case the mapping is not found, the index of the intSet otherwise.
 int alreadyMapped(intSet states) {
     int i;
-    for (i=0; i<mapping_size; i++) {
+    for (i=0; i<mapping_current_size; i++) {
         if (isEqualIntSet(states, mapping[i])) {
             return i;
         }
@@ -142,14 +161,18 @@ intSet epsilonStarClosure(int state, nfa n) {
     intSet current_state_closure_copy = copyIntSet(current_state_closure);
 
     while (!isEmptyIntSet(current_state_closure_copy)) {
-        unsigned int state = chooseFromIntSet(current_state_closure_copy);
-        deleteIntSet(state, &current_state_closure_copy);
+        unsigned int state_to_expand = chooseFromIntSet(current_state_closure_copy);
+        deleteIntSet(state_to_expand, &current_state_closure_copy);
 
-        unionIntSet(&current_state_closure, epsilonStarClosure(state, n));
+        if (state_to_expand != state) {
+            unionIntSet(&current_state_closure, epsilonStarClosure(state_to_expand, n));
+        }
     }
 
     // Add the state itself in the intSet.
-    insertIntSet(state, &current_state_closure);
+    if (! isMemberIntSet(state, current_state_closure)) {
+        insertIntSet(state, &current_state_closure);
+    }
 
     return current_state_closure;
 }
@@ -198,29 +221,38 @@ intSet movementSet(intSet states, unsigned int symbol, nfa automaton) {
 }
 
 dfa convertNFAtoDFA(nfa n) {
-    mapping_size = 0;
-    mapping = (intSet*) safeMalloc(sizeof(intSet) * pow(2, n.nstates));
+    mapping = (intSet*) safeMalloc(sizeof(intSet) * n.nstates);
+    mapping_total_size = n.nstates;
+    mapping_current_size = 0;
 
     // Map the first state to the start state (0)
     intSet first_mapping = makeEmptyIntSet();
-    insertIntSet(0, &first_mapping);
-    mapping[mapping_size] = copyIntSet(first_mapping);
+    insertIntSet(n.start, &first_mapping);
+    if (mapping_current_size > mapping_total_size-1) {
+        reallocateMapping(sizeof(intSet) * (mapping_current_size+1));
+    }
+    mapping[mapping_current_size] = copyIntSet(first_mapping);
     freeIntSet(first_mapping);
-    mapping_size++;
+    mapping_current_size++;
 
-    dfa final_dfa = makeNFA(pow(2, n.nstates));
+    dfa final_dfa = makeNFA(1);
     int visited_count = 0;
+    //*** Setar estado inicial!!!!
 
-    while (visited_count < mapping_size) {
+    // Checks if there's a new state to expand.
+    while (visited_count < mapping_current_size) {
         int i;
         for (i=0; i<EPSILON; i++) {
-            //intSet state = epsilonStarClosureSet(movementSet(mapping[visited_count], i, n), n);
-            intSet state = movementSet(epsilonStarClosureSet(mapping[visited_count], n), i, n);
+            intSet state = epsilonStarClosureSet(movementSet(epsilonStarClosureSet(mapping[visited_count], n), i, n), n);
+            printlnIntSet(state);
             if (!isEmptyIntSet(state)) {
                 // If the state is not yet mapped/expanded
                 if (alreadyMapped(state) == -1) {
-                    mapping[mapping_size] = copyIntSet(state);
-                    mapping_size++;
+                    if (mapping_current_size > (mapping_total_size-1)) {
+                        reallocateMapping(sizeof(intSet) * (mapping_current_size+1));
+                    }
+                    mapping[mapping_current_size] = copyIntSet(state);
+                    mapping_current_size++;
                 }
 
                 unsigned int mapped_state = alreadyMapped(state);
@@ -230,6 +262,12 @@ dfa convertNFAtoDFA(nfa n) {
                 }
                 else {
                     insertIntSet(mapped_state, &new_state);
+                    if (visited_count > final_dfa.nstates-1) {
+                        reallocateNfaStates(&final_dfa, visited_count+1);
+                    }
+                    if (mapped_state > final_dfa.nstates-1){
+                        reallocateNfaStates(&final_dfa, mapped_state+1);
+                    }
                     final_dfa.transition[visited_count][i] = copyIntSet(new_state);
                     freeIntSet(new_state);
                 }
@@ -240,7 +278,7 @@ dfa convertNFAtoDFA(nfa n) {
 
     // Assign the final states
     int i;
-    for (i=0; i<mapping_size; i++) {
+    for (i=0; i<mapping_current_size; i++) {
         intSet state = copyIntSet(mapping[i]);
         intersectionIntSet(&state, n.final);
         if (!isEmptyIntSet(state)) {
@@ -546,50 +584,13 @@ nfa positiveClosureNFA(nfa nfa){
     return new_nfa;
 }
 
-// Given a regexp LITERAL_CHAR, LITERAL_INT or an ASCII value, creates its correspondent NFA.
-nfa regexpToNFA(char* regexp){
-    nfa nfa = makeNFA(2);
-    nfa.start = 0;
 
-    // Add a transition with the given symbol from the start state to the final state 1.
-    if(regexp[0] == '\''){
-        insertIntSet(1, &nfa.transition[0][(int)regexp[1]]);
+
+void printMapping() {
+    int i;
+    for (i=0; i<mapping_current_size; i++) {
+        printf("Mapping for state %d: ", i);
+        printlnIntSet(mapping[i]);
+        printf("\n");
     }
-    else if(regexp[0] == '#'){
-        char* symb = strtok(regexp, "#");
-        int symbol = atoi(symb);
-        insertIntSet(1, &nfa.transition[0][symbol]);
-    }else if(strcmp(regexp, "eof") == 0){
-        // EOF ASCII symbol is 0
-        insertIntSet(1, &nfa.transition[0][0]);
-    }else if(strcmp(regexp, "anychar") == 0){
-        int i;
-        for (i = 0; i <= 127; i++){
-            insertIntSet(1, &nfa.transition[0][i]);
-        }
-    }else if(strcmp(regexp, "epsilon") == 0){
-        insertIntSet(1, &nfa.transition[0][128]);
-    }else {
-        ScannerDefinition *definition;
-        definition = searchDefinition(regexp);
-
-        if (definition != NULL){
-            intSet expansion_copy = copyIntSet(definition->definition_expansion);
-            // Add a transition for each symbol that the definition represents.
-            while (! isEmptyIntSet(expansion_copy)) {
-                int symbol = chooseFromIntSet(expansion_copy);
-                deleteIntSet(symbol, &expansion_copy);
-                insertIntSet(1, &nfa.transition[0][symbol]);
-            }
-        }
-        else{
-            fprintf(stderr, "Error on regexpToNFA: definition \'%s\' not found.\n", regexp);
-            exit(EXIT_FAILURE);
-        }
-    }
-    intSet final_state = makeEmptyIntSet();
-    insertIntSet(1, &final_state);
-    nfa.final = copyIntSet(final_state);
-
-    return nfa;
 }

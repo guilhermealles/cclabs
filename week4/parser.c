@@ -762,7 +762,7 @@ break;
 LLtcnt[30]--;
 LL_SCANDONE(286);/* CLOSE_CURLYBRACES */
 #line 71 "parser.g"
-{ evaluateRegexTree(rSet); addTreeToArray(rSet); saveNFA("out.nfa", rSet->regex_nfa);}
+{ evaluateRegexTree(rSet); addTreeToArray(rSet); }
 #line 767 "parser.c"
 LLread();
 break;
