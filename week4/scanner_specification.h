@@ -83,6 +83,7 @@ void addDefaultAction();
 void addAction(char *lexeme);
 void addNoAction();
 
+nfa regexpToNFA(char* regexp);
 void convertAndSaveDFAs();
 void printTokensAndActions();
 

@@ -36,7 +36,6 @@ nfa concatenateNFAs(nfa nfa1, nfa nfa2);
 nfa kleeneClosureNFA(nfa nfa);
 nfa optionalOperationNFA(nfa nfa);
 nfa positiveClosureNFA(nfa nfa);
-nfa regexpToNFA(char* regexp);
 
 void printMapping();
 

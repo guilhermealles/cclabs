@@ -187,9 +187,14 @@ void declareGetNextStateFunction(FILE *file){
 void declareMain(FILE *file) {
     fprintf(file, "int main(int argc, char **argv) {\n");
     fprintf(file, "input_buffer = malloc(1024*1024); \n");
+    fprintf(file, "readDFAs();\n");
+    fprintf(file, "fillActions();\n");
+    fprintf(file, "fillTokens();\n");
     fprintf(file, "while(1) { \n");
     fprintf(file, "scanf(\"%%s\", input_buffer); \n");
     fprintf(file, "%s();\n", getOptionsSection().lexer_routine);
+    fprintf(file, "input_buffer[0] = '\\");
+    fprintf(file, "0';\n");
     fprintf(file, "} \n");
     fprintf(file, "} \n");
 }
