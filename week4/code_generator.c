@@ -128,7 +128,6 @@ void declareGetNewInputFunction(FILE *file){
     fprintf(file, "new_input[new_index] = input[i];\n");
     fprintf(file, "new_index++;\n");
     fprintf(file, "}\n");
-    fprintf(file, "free(input);\n");
     fprintf(file, "return new_input;\n");
     fprintf(file, "}\n");
 }

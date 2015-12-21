@@ -105,7 +105,6 @@ for(i = trimming_size; i < old_size; i++){
 new_input[new_index] = input[i];
 new_index++;
 }
-free(input);
 return new_input;
 }
 int yylex(){ 
