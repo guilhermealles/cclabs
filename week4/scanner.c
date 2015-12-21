@@ -140,6 +140,5 @@ fillTokens();
 while(1) { 
 scanf("%s", input_buffer); 
 yylex();
-input_buffer[0] = '\0';
 } 
 } 

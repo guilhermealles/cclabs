@@ -192,8 +192,6 @@ void declareMain(FILE *file) {
     fprintf(file, "while(1) { \n");
     fprintf(file, "scanf(\"%%s\", input_buffer); \n");
     fprintf(file, "%s();\n", getOptionsSection().lexer_routine);
-    fprintf(file, "input_buffer[0] = '\\");
-    fprintf(file, "0';\n");
     fprintf(file, "} \n");
     fprintf(file, "} \n");
 }
