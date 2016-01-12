@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "quadruple.h"
 #include "misc.h"
 
@@ -74,11 +75,82 @@ static void deallocateTable() {
 
 
 /********************************************************************/
+char* replace(char *operand) {
+    int stringTableIndex = lookupInStringTable(operand);
+    if (stringTableIndex == -1) {
+        return operand;
+    }
+    else {
+        free(operand);
+        char *returnstr = malloc(sizeof(char) * (strlen(table[stringTableIndex].str) + 1));
+        strcpy(returnstr, table[stringTableIndex].str);
+        return returnstr;
+    }
+}
+
+int isConstant(char *operand) {
+    if (operand[0] > 47 && operand[0] < 58) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+int calculateQuadruple(quadruple quad) {
+    int operand1 = atoi(quad.operand1);
+    int operand2 = atoi(quad.operand2);
+
+    int result;
+    switch(quad.operation) {
+        case PLUSOP:
+            result = operand1 + operand2;
+            break;
+        case MINUSOP:
+            result = operand1 - operand2;
+            break;
+        case TIMESOP:
+            result = operand1 * operand2;
+            break;
+        case DIVOP:
+            if (operand2 == 0) {
+                fprintf(stderr, "Error: division by zero!\n");
+                exit(EXIT_FAILURE);
+            }
+            result = operand1 / operand2;
+            break;
+        default:
+            fprintf(stderr, "Unknown error.\n");
+            exit(EXIT_FAILURE);
+            break;
+    }
+    return result;
+}
 
 void processQuadruple(quadruple quad) {
-    /* PLACE HERE YOUR OWN CODE */
-    /* ........................ */
-    
+
+    if (quad.operation == ASSIGNMENT) {
+        quad.operand1 = replace(quad.operand1);
+        removeStringPairs(quad.lhs);
+        insertStringPair(quad.lhs, quad.operand1);
+    }
+    else {
+        quad.operand1 = replace(quad.operand1);
+        quad.operand2 = replace(quad.operand2);
+        removeStringPairs(quad.lhs);
+
+        if (isConstant(quad.operand1) && isConstant(quad.operand2)) {
+            int result = calculateQuadruple(quad);
+            char *resultstr = malloc(sizeof(char) * 11);
+            sprintf(resultstr, "%d", result);
+            quad.operation = ASSIGNMENT;
+            strcpy(quad.operand1, resultstr);
+            free(resultstr);
+
+            insertStringPair(quad.lhs, quad.operand1);
+        }
+    }
+
     fprintfQuadruple(stdout, quad);
     fprintf(stdout, "\n");
     freeQuadruple(quad);
@@ -88,11 +160,11 @@ int main(int argc, char **argv) {
     if (argc != 2) {
         abortMessage("Usage: %s <program.ir>", argv[0]);
     }
-    
+
     initLexer(argv[1]);
     yyparse();
     finalizeLexer();
     deallocateTable();
-    
+
     return EXIT_SUCCESS;
 }
