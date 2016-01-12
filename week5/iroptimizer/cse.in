@@ -1,0 +1,17 @@
+a = b + 1;
+c = a + b;
+d = m*n;
+e = b + d;
+f = a + b;
+h = b + a;
+a = j + a;
+k = m*n;
+j = b + d;
+c = a - b;
+d = b - a;
+a = b/c;
+d = c/b;
+a = b;
+c = b;
+d = b;
+e = b*f;

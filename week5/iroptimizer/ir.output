@@ -1,0 +1,245 @@
+Grammar
+
+    0 $accept: IRgrammar $end
+
+    1 IRgrammar: Line IRgrammar
+    2          | /* empty */
+
+    3 @1: /* empty */
+
+    4 Line: Lhs EQUALS Rhs @1 SEMICOLON
+
+    5 Lhs: IDENTIFIER
+
+    6 Rhs: Operand1
+    7    | Operand1 Operator Operand2
+
+    8 Operand1: IDENTIFIER
+    9         | INTCONSTANT
+
+   10 Operand2: IDENTIFIER
+   11         | INTCONSTANT
+
+   12 Operator: PLUS
+   13         | MINUS
+   14         | TIMES
+   15         | DIV
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+IDENTIFIER (258) 5 8 10
+EQUALS (259) 4
+INTCONSTANT (260) 9 11
+SEMICOLON (261) 4
+PLUS (262) 12
+MINUS (263) 13
+TIMES (264) 14
+DIV (265) 15
+
+
+Nonterminals, with rules where they appear
+
+$accept (11)
+    on left: 0
+IRgrammar (12)
+    on left: 1 2, on right: 0 1
+Line (13)
+    on left: 4, on right: 1
+@1 (14)
+    on left: 3, on right: 4
+Lhs (15)
+    on left: 5, on right: 4
+Rhs (16)
+    on left: 6 7, on right: 4
+Operand1 (17)
+    on left: 8 9, on right: 6 7
+Operand2 (18)
+    on left: 10 11, on right: 7
+Operator (19)
+    on left: 12 13 14 15, on right: 7
+
+
+state 0
+
+    0 $accept: . IRgrammar $end
+
+    IDENTIFIER  shift, and go to state 1
+
+    $default  reduce using rule 2 (IRgrammar)
+
+    IRgrammar  go to state 2
+    Line       go to state 3
+    Lhs        go to state 4
+
+
+state 1
+
+    5 Lhs: IDENTIFIER .
+
+    $default  reduce using rule 5 (Lhs)
+
+
+state 2
+
+    0 $accept: IRgrammar . $end
+
+    $end  shift, and go to state 5
+
+
+state 3
+
+    1 IRgrammar: Line . IRgrammar
+
+    IDENTIFIER  shift, and go to state 1
+
+    $default  reduce using rule 2 (IRgrammar)
+
+    IRgrammar  go to state 6
+    Line       go to state 3
+    Lhs        go to state 4
+
+
+state 4
+
+    4 Line: Lhs . EQUALS Rhs @1 SEMICOLON
+
+    EQUALS  shift, and go to state 7
+
+
+state 5
+
+    0 $accept: IRgrammar $end .
+
+    $default  accept
+
+
+state 6
+
+    1 IRgrammar: Line IRgrammar .
+
+    $default  reduce using rule 1 (IRgrammar)
+
+
+state 7
+
+    4 Line: Lhs EQUALS . Rhs @1 SEMICOLON
+
+    IDENTIFIER   shift, and go to state 8
+    INTCONSTANT  shift, and go to state 9
+
+    Rhs       go to state 10
+    Operand1  go to state 11
+
+
+state 8
+
+    8 Operand1: IDENTIFIER .
+
+    $default  reduce using rule 8 (Operand1)
+
+
+state 9
+
+    9 Operand1: INTCONSTANT .
+
+    $default  reduce using rule 9 (Operand1)
+
+
+state 10
+
+    4 Line: Lhs EQUALS Rhs . @1 SEMICOLON
+
+    $default  reduce using rule 3 (@1)
+
+    @1  go to state 12
+
+
+state 11
+
+    6 Rhs: Operand1 .
+    7    | Operand1 . Operator Operand2
+
+    PLUS   shift, and go to state 13
+    MINUS  shift, and go to state 14
+    TIMES  shift, and go to state 15
+    DIV    shift, and go to state 16
+
+    $default  reduce using rule 6 (Rhs)
+
+    Operator  go to state 17
+
+
+state 12
+
+    4 Line: Lhs EQUALS Rhs @1 . SEMICOLON
+
+    SEMICOLON  shift, and go to state 18
+
+
+state 13
+
+   12 Operator: PLUS .
+
+    $default  reduce using rule 12 (Operator)
+
+
+state 14
+
+   13 Operator: MINUS .
+
+    $default  reduce using rule 13 (Operator)
+
+
+state 15
+
+   14 Operator: TIMES .
+
+    $default  reduce using rule 14 (Operator)
+
+
+state 16
+
+   15 Operator: DIV .
+
+    $default  reduce using rule 15 (Operator)
+
+
+state 17
+
+    7 Rhs: Operand1 Operator . Operand2
+
+    IDENTIFIER   shift, and go to state 19
+    INTCONSTANT  shift, and go to state 20
+
+    Operand2  go to state 21
+
+
+state 18
+
+    4 Line: Lhs EQUALS Rhs @1 SEMICOLON .
+
+    $default  reduce using rule 4 (Line)
+
+
+state 19
+
+   10 Operand2: IDENTIFIER .
+
+    $default  reduce using rule 10 (Operand2)
+
+
+state 20
+
+   11 Operand2: INTCONSTANT .
+
+    $default  reduce using rule 11 (Operand2)
+
+
+state 21
+
+    7 Rhs: Operand1 Operator Operand2 .
+
+    $default  reduce using rule 7 (Rhs)
