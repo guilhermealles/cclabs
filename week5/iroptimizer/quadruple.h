@@ -4,14 +4,14 @@
 #include <stdio.h>
 
 typedef enum operator {
-  ASSIGNMENT, PLUSOP, MINUSOP, TIMESOP, DIVOP
+    ASSIGNMENT, PLUSOP, MINUSOP, TIMESOP, DIVOP
 } operator;
 
 typedef struct quadruple {
-  char *lhs;
-  operator operation;
-  char *operand1;
-  char *operand2; /* not used if operation == ASSIGNMENT */
+    char *lhs;
+    operator operation;
+    char *operand1;
+    char *operand2; /* not used if operation == ASSIGNMENT */
 } quadruple;
 
 quadruple makeQuadruple(char *lhs, operator op, char *op1, char *op2);
