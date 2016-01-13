@@ -12,13 +12,27 @@ typedef struct stringPair {
     char *key, *str;
 } stringPair;
 
+typedef struct tempAssignment{
+    char* var;
+    quadruple quad;
+} tempAssignment;
+
 static stringPair *table = NULL;
 static int tableSize=0;     /* number of pairs in the pair table */
 static int allocatedSize=0; /* allocated number of table entries */
 
+static tempAssignment *subexp_table = NULL;
+static int subexp_table_size=0;
+static int subexp_table_alocated_size = 0;
+
 static void resizeStringTable() {
     allocatedSize = (allocatedSize == 0 ? 1 : 2*allocatedSize);
     table = safeRealloc(table, allocatedSize*sizeof(stringPair));
+}
+
+static void resizeSubexpressionTable(){
+    subexp_table_alocated_size = (subexp_table_alocated_size == 0 ? 1 : 2 * subexp_table_alocated_size);
+    subexp_table = safeRealloc(subexp_table, subexp_table_alocated_size * sizeof(tempAssignment));
 }
 
 static int lookupInStringTable(char *key) {
@@ -29,6 +43,15 @@ static int lookupInStringTable(char *key) {
         }
     }
     return -1;  /* not found */
+}
+
+static int lookupInSubexpressionTable(char op1, char op2, operator operation){
+    int i;
+    for (i = 0; i < subexp_table_size; i++){
+        if (operation == ){
+
+        }
+    }
 }
 
 static void insertStringPair(char *key, char *str) {
@@ -128,6 +151,7 @@ int calculateQuadruple(quadruple quad) {
 }
 
 void processQuadruple(quadruple quad) {
+<<<<<<< Updated upstream
 
     if (quad.operation == ASSIGNMENT) {
         quad.operand1 = replace(quad.operand1);
@@ -150,6 +174,10 @@ void processQuadruple(quadruple quad) {
             insertStringPair(quad.lhs, quad.operand1);
         }
     }
+=======
+    /* PLACE HERE YOUR OWN CODE */
+    /* ........................ */
+>>>>>>> Stashed changes
 
     fprintfQuadruple(stdout, quad);
     fprintf(stdout, "\n");
