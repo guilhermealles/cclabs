@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "quadruple.h"
+#include "deadcode.h"
 #include "misc.h"
 
 extern int yyparse();
@@ -179,18 +180,25 @@ void processQuadruple(quadruple quad) {
     /* ........................ */
 >>>>>>> Stashed changes
 
-    fprintfQuadruple(stdout, quad);
-    fprintf(stdout, "\n");
+    insertQuadrupleInQueue(quad);
     freeQuadruple(quad);
 }
+
 
 int main(int argc, char **argv) {
     if (argc != 2) {
         abortMessage("Usage: %s <program.ir>", argv[0]);
     }
 
+    initializeQuadrupleQueue();
     initLexer(argv[1]);
+
     yyparse();
+
+    runDeadCodeElimination();
+    fprintfQuadrupleQueue(stdout);
+    destroyQuadrupleQueue();
+
     finalizeLexer();
     deallocateTable();
 
