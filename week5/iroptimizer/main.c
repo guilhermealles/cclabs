@@ -12,18 +12,14 @@ typedef struct stringPair {
     char *key, *str;
 } stringPair;
 
-typedef struct tempAssignment{
-    char* var;
-    quadruple quad;
-} tempAssignment;
-
 static stringPair *table = NULL;
 static int tableSize=0;     /* number of pairs in the pair table */
 static int allocatedSize=0; /* allocated number of table entries */
 
-static tempAssignment *subexp_table = NULL;
+static quadruple *subexp_table = NULL;
 static int subexp_table_size=0;
 static int subexp_table_alocated_size = 0;
+static int temp_variable_count = 1;
 
 static void resizeStringTable() {
     allocatedSize = (allocatedSize == 0 ? 1 : 2*allocatedSize);
@@ -32,7 +28,7 @@ static void resizeStringTable() {
 
 static void resizeSubexpressionTable(){
     subexp_table_alocated_size = (subexp_table_alocated_size == 0 ? 1 : 2 * subexp_table_alocated_size);
-    subexp_table = safeRealloc(subexp_table, subexp_table_alocated_size * sizeof(tempAssignment));
+    subexp_table = safeRealloc(subexp_table, subexp_table_alocated_size * sizeof(quadruple));
 }
 
 static int lookupInStringTable(char *key) {
@@ -45,13 +41,33 @@ static int lookupInStringTable(char *key) {
     return -1;  /* not found */
 }
 
-static int lookupInSubexpressionTable(char op1, char op2, operator operation){
-    int i;
-    for (i = 0; i < subexp_table_size; i++){
-        if (operation == ){
-
+static int areEqualSubexpressions(quadruple quad1, quadruple quad2){
+    if (quad1.operation == quad2.operation){
+        if (areEqualStrings(quad1.operand1, quad2.operand1)){
+            if (areEqualStrings(quad1.operand2, quad2.operand2)){
+                return 1;
+            }
+        }
+        else if(quad1.operation == PLUSOP || quad1.operation == TIMESOP){
+            // Considers commutativity
+            if (areEqualStrings(quad1.operand1, quad2.operand2)){
+                if (areEqualStrings(quad1.operand2, quad2.operand1)){
+                    return 1;
+                }
+            }
         }
     }
+    return 0;
+}
+
+static int lookupInSubexpressionTable(quadruple q){
+    int i;
+    for (i = 0; i < subexp_table_size; i++){
+        if (areEqualSubexpressions(subexp_table[i], q)){
+            return i;
+        }
+    }
+    return -1; // not found
 }
 
 static void insertStringPair(char *key, char *str) {
@@ -69,6 +85,25 @@ static void insertStringPair(char *key, char *str) {
     tableSize++;
 }
 
+static void insertSubexpression(quadruple quad){
+    int index = lookupInSubexpressionTable(quad);
+
+    if (index == -1){
+        if (subexp_table_size == subexp_table_alocated_size){
+            resizeSubexpressionTable();
+        }
+        char *temp_name = malloc(sizeof(char)*12);
+        sprintf(temp_name, "_%d", temp_variable_count);
+        quadruple q;
+        q = makeQuadruple(temp_name, quad.operation, quad.operand1, quad.operand2);
+
+        subexp_table[subexp_table_size] = q;
+        subexp_table_size++;
+        free(temp_name);
+        temp_variable_count++;
+    }
+}
+
 static void removeStringPairs(char *key) {
     /* remove any pair (x,y) where x==key or y==key from table */
     int i, idx;
@@ -84,6 +119,22 @@ static void removeStringPairs(char *key) {
     tableSize = idx;
 }
 
+/* Remove an expression from the table if any operand is changed. */
+static void removeSubexpressionPairs(char *operand){
+    int i, index;
+
+    for(i = index = 0; i < subexp_table_size; i++){
+        if (areEqualStrings(subexp_table[i].operand1, operand) ||
+            areEqualStrings(subexp_table[i].operand2, operand)){
+            freeQuadruple(subexp_table[i]);
+        }
+        else{
+            subexp_table[index++] = subexp_table[i];
+        }
+    }
+    subexp_table_size = index;
+}
+
 static void deallocateTable() {
     int i;
     for (i=0; i < tableSize; i++) {
@@ -96,6 +147,16 @@ static void deallocateTable() {
     allocatedSize = 0;
 }
 
+static void deallocateSubexpressionTable(){
+    int i;
+    for (i = 0; i < subexp_table_size; i++){
+        freeQuadruple(subexp_table[i]);
+    }
+    free(subexp_table);
+    subexp_table = NULL;
+    subexp_table_size = 0;
+    subexp_table_alocated_size = 0;
+}
 
 /********************************************************************/
 char* replace(char *operand) {
@@ -151,8 +212,7 @@ int calculateQuadruple(quadruple quad) {
 }
 
 void processQuadruple(quadruple quad) {
-<<<<<<< Updated upstream
-
+    /* Copy propagation. */
     if (quad.operation == ASSIGNMENT) {
         quad.operand1 = replace(quad.operand1);
         removeStringPairs(quad.lhs);
@@ -174,10 +234,31 @@ void processQuadruple(quadruple quad) {
             insertStringPair(quad.lhs, quad.operand1);
         }
     }
-=======
-    /* PLACE HERE YOUR OWN CODE */
-    /* ........................ */
->>>>>>> Stashed changes
+
+    /* Common subexpression elimination. */
+
+    /* If one of the operands is equal to the LHS, there's no need to look for
+    it on the table. Also, if the expression is a unary operation (i.e. a = b),
+    just copy it.*/
+    if((quad.operand2 != NULL)
+        && !(areEqualStrings(quad.lhs, quad.operand1) ||
+         areEqualStrings(quad.lhs, quad.operand2))){
+
+        int index;
+        index = lookupInSubexpressionTable(quad);
+
+        if (index == -1){
+            insertSubexpression(quad);
+            fprintfQuadruple(stdout, subexp_table[subexp_table_size-1]);
+            fprintf(stdout, "\n");
+            index = subexp_table_size-1;
+        }
+        quad.operation = ASSIGNMENT;
+        free(quad.operand1);
+        quad.operand1 = malloc(sizeof(char) * strlen(subexp_table[index].lhs)+1);
+        strcpy(quad.operand1, subexp_table[index].lhs);
+    }
+    removeSubexpressionPairs(quad.lhs);
 
     fprintfQuadruple(stdout, quad);
     fprintf(stdout, "\n");
@@ -193,6 +274,7 @@ int main(int argc, char **argv) {
     yyparse();
     finalizeLexer();
     deallocateTable();
+    deallocateSubexpressionTable();
 
     return EXIT_SUCCESS;
 }
