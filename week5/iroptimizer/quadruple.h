@@ -17,6 +17,8 @@ typedef struct quadruple {
 typedef struct quadrupleQueue {
     quadruple *quad;
     int removed_quadruple;
+    int rhs_index_consolidation;
+    
     struct quadrupleQueue *next;
 } quadrupleQueue;
 
@@ -35,6 +37,8 @@ void removeQuadrupleFromQueue(quadruple quad);
 void removeQuadrupleFromQueueWithIndex(int index);
 void destroyQuadrupleQueue();
 int getQuadrupleIndex(quadruple quad);
+quadrupleQueue* getQuadrupleQueuePtrFromIndex(int index);
+void removeConsolidationScheduleFromIndex(int index);
 void fprintfQuadrupleQueue(FILE *f);
 
 #endif

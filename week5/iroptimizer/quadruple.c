@@ -21,7 +21,7 @@ quadruple* duplicateQuadruple(quadruple quad) {
     q->operation = quad.operation;
     q->operand1 = stringDuplicate(quad.operand1);
     q->operand2 = stringDuplicate(quad.operand2);
-
+    
     return q;
 }
 
@@ -60,7 +60,7 @@ int isEqualQuadruple(quadruple quad1, quadruple quad2) {
     if (strcmp(quad1.operand2, quad2.operand2) != 0) {
         return 0;
     }
-
+    
     return 1;
 }
 
@@ -76,14 +76,14 @@ quadrupleQueue* getQuadrupleQueuePointer() {
 void destroyQuadrupleQueue() {
     if (quad_queue != NULL) {
         quadrupleQueue *next_ptr = quad_queue->next;
-
+        
         while (next_ptr != NULL) {
             freeQuadruple(*quad_queue->quad);
             free(quad_queue);
             quad_queue = next_ptr;
             next_ptr = quad_queue->next;
         }
-
+        
         freeQuadruple(*quad_queue->quad);
         free(quad_queue);
     }
@@ -93,7 +93,7 @@ void destroyQuadrupleQueue() {
 int insertQuadrupleInQueue(quadruple quad) {
     quadrupleQueue *queue_ptr = quad_queue;
     int index = 0;
-
+    
     if (queue_ptr == NULL) {
         queue_ptr = malloc(sizeof(quadrupleQueue));
         quad_queue = queue_ptr;
@@ -106,49 +106,51 @@ int insertQuadrupleInQueue(quadruple quad) {
         queue_ptr->next = malloc(sizeof(quadrupleQueue));
         queue_ptr = queue_ptr->next;
     }
-
+    
     queue_ptr->quad = duplicateQuadruple(quad);
     queue_ptr->removed_quadruple = 0;
+    queue_ptr->rhs_index_consolidation = -1;
+    
     queue_ptr->next = NULL;
-
+    
     return index;
 }
 
 /*
-void removeQuadrupleFromQueue(quadruple quad) {
-    quadrupleQueue *queue_ptr = quad_queue;
-
-    if (queue_ptr != NULL) {
-        // First element of the queue
-        if (isEqualQuadruple(quad, *queue_ptr->quad)) {
-            quad_queue = queue_ptr->next;
-            freeQuadruple(*queue_ptr->quad);
-            free(queue_ptr);
-        }
-        else {
-            while (queue_ptr->next != NULL) {
-                if (isEqualQuadruple(quad, *queue_ptr->next->quad)) {
-                    quadrupleQueue *next_next_ptr = queue_ptr->next->next;
-                    freeQuadruple(*queue_ptr->next->quad);
-                    free(queue_ptr->next);
-                    queue_ptr->next = next_next_ptr;
-                }
-                queue_ptr = queue_ptr->next;
-            }
-        }
-    }
-}
-*/
+ void removeQuadrupleFromQueue(quadruple quad) {
+ quadrupleQueue *queue_ptr = quad_queue;
+ 
+ if (queue_ptr != NULL) {
+ // First element of the queue
+ if (isEqualQuadruple(quad, *queue_ptr->quad)) {
+ quad_queue = queue_ptr->next;
+ freeQuadruple(*queue_ptr->quad);
+ free(queue_ptr);
+ }
+ else {
+ while (queue_ptr->next != NULL) {
+ if (isEqualQuadruple(quad, *queue_ptr->next->quad)) {
+ quadrupleQueue *next_next_ptr = queue_ptr->next->next;
+ freeQuadruple(*queue_ptr->next->quad);
+ free(queue_ptr->next);
+ queue_ptr->next = next_next_ptr;
+ }
+ queue_ptr = queue_ptr->next;
+ }
+ }
+ }
+ }
+ */
 
 void removeQuadrupleFromQueueWithIndex(int index) {
     int i = 0;
     quadrupleQueue *queue_ptr = quad_queue;
-
+    
     while (i!=index && queue_ptr != NULL) {
         queue_ptr = queue_ptr->next;
         i++;
     }
-
+    
     if (i == index) {
         // Mark quadruple as removed.
         queue_ptr->removed_quadruple = 1;
@@ -162,7 +164,7 @@ void removeQuadrupleFromQueueWithIndex(int index) {
 int getQuadrupleIndex(quadruple quad) {
     int i = 0;
     quadrupleQueue *queue_ptr = quad_queue;
-
+    
     while (queue_ptr != NULL) {
         if (isEqualQuadruple(quad, *queue_ptr->quad)) {
             return i;
@@ -170,13 +172,38 @@ int getQuadrupleIndex(quadruple quad) {
         i++;
         queue_ptr = queue_ptr->next;
     }
-
+    
     return -1;
 }
 
+quadrupleQueue* getQuadrupleQueuePtrFromIndex(int index) {
+    int i=0;
+    quadrupleQueue *queue_ptr = quad_queue;
+    
+    while (queue_ptr != NULL && i < index) {
+        queue_ptr = queue_ptr->next;
+        i++;
+    }
+    return queue_ptr;
+}
+
+// given the index of a quadruple, remove all the consolidations (it should actually be only 1) of other quadruples with the rhs of this quadruple
+void removeConsolidationScheduleFromIndex(int index) {
+    quadrupleQueue *queue_ptr = quad_queue;
+    
+    while (queue_ptr != NULL) {
+        if (queue_ptr->rhs_index_consolidation == index) {
+            queue_ptr->rhs_index_consolidation = -1;
+        }
+        
+        queue_ptr = queue_ptr->next;
+    }
+}
+
+
 void fprintfQuadrupleQueue(FILE *f) {
     quadrupleQueue *queue_ptr = quad_queue;
-
+    
     while (queue_ptr != NULL) {
         if (!queue_ptr->removed_quadruple) {
             fprintfQuadruple(f, *queue_ptr->quad);

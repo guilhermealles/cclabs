@@ -239,26 +239,25 @@ void processQuadruple(quadruple quad) {
     /* Common subexpression elimination. */
 
     /* If one of the operands is equal to the LHS, there's no need to look for
-    it on the table. Also, if the expression is a unary operation (i.e. a = b),
-    just copy it.*/
+     it on the table. Also, if the expression is a unary operation (i.e. a = b),
+     just copy it.*/
     if((quad.operand2 != NULL)
-        && !(areEqualStrings(quad.lhs, quad.operand1) ||
-         areEqualStrings(quad.lhs, quad.operand2))){
+       && !(areEqualStrings(quad.lhs, quad.operand1) ||
+            areEqualStrings(quad.lhs, quad.operand2))){
 
-        int index;
-        index = lookupInSubexpressionTable(quad);
+           int index;
+           index = lookupInSubexpressionTable(quad);
 
-        if (index == -1){
-            insertSubexpression(quad);
-            fprintfQuadruple(stdout, subexp_table[subexp_table_size-1]);
-            fprintf(stdout, "\n");
-            index = subexp_table_size-1;
-        }
-        quad.operation = ASSIGNMENT;
-        free(quad.operand1);
-        quad.operand1 = malloc(sizeof(char) * strlen(subexp_table[index].lhs)+1);
-        strcpy(quad.operand1, subexp_table[index].lhs);
-    }
+           if (index == -1){
+               insertSubexpression(quad);
+               insertQuadrupleInQueue(subexp_table[subexp_table_size-1]);
+               index = subexp_table_size-1;
+           }
+           quad.operation = ASSIGNMENT;
+           free(quad.operand1);
+           quad.operand1 = malloc(sizeof(char) * strlen(subexp_table[index].lhs)+1);
+           strcpy(quad.operand1, subexp_table[index].lhs);
+       }
     removeSubexpressionPairs(quad.lhs);
 
     insertQuadrupleInQueue(quad);
@@ -275,8 +274,8 @@ int main(int argc, char **argv) {
     initLexer(argv[1]);
 
     yyparse();
-
     runDeadCodeElimination();
+
     fprintfQuadrupleQueue(stdout);
     destroyQuadrupleQueue();
 

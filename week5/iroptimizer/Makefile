@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-g -O0 -Wall
-OBJECTS=misc.o quadruple.o deadcode.o main.o
+OBJECTS=misc.o quadruple.o deadcode.o varcount.o main.o
 all: scanner parser ${OBJECTS}
 	${CC} -o iroptimizer ${CFLAGS} ir.tab.c ${OBJECTS} -ll -lm
 
